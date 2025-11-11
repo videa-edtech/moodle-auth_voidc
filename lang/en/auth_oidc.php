@@ -497,3 +497,6 @@ $string['missing_idp_type'] = 'This configuration is only available if an IdP ty
 
 // phpcs:enable moodle.Files.LangFilesOrdering.IncorrectOrder
 // phpcs:enable moodle.Files.LangFilesOrdering.UnexpectedComment
+
+$string['cfg_oidcservice_key'] = 'OIDC Service';
+$string['cfg_oidcservice_desc'] = 'Which OIDC service you used';

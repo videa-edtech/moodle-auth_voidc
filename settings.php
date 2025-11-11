@@ -122,6 +122,15 @@ if ($hassiteconfig) {
         get_string('cfg_signoffintegration_key', 'auth_oidc'),
         get_string('cfg_signoffintegration_desc', 'auth_oidc', $CFG->wwwroot), '0'));
 
+    // Single sign out from Moodle for keycloak
+    $oidcservices = [
+        'default' => 'default',
+        'keycloak' => 'keycloak',
+    ];
+    $settings->add(new admin_setting_configselect('auth_oidc/oidc_service',
+        get_string('cfg_oidcservice_key', 'auth_oidc'),
+        get_string('cfg_oidcservice_desc', 'auth_oidc', $CFG->wwwroot), 'ddefault', $oidcservices));
+
     // IdP logout endpoint.
     $settings->add(new admin_setting_configtext('auth_oidc/logouturi',
         get_string('cfg_logoutendpoint_key', 'auth_oidc'), get_string('cfg_logoutendpoint_desc', 'auth_oidc'),

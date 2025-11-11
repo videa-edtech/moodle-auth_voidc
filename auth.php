@@ -305,6 +305,7 @@ class auth_plugin_oidc extends \auth_plugin_base {
         global $CFG, $DB;
 
         $singlesignoutsetting = get_config('auth_oidc', 'single_sign_off');
+        $oidcservicesetting = get_config('auth_oidc', 'oidc_service');
 
         if ($singlesignoutsetting) {
             $redirect = false;
@@ -317,10 +318,14 @@ class auth_plugin_oidc extends \auth_plugin_base {
                 }
             }
 
+            if ($oidcservicesetting == 'keycloak') {
+                $redirect = false;
+            }
+
             if ($redirect) {
                 $logouturl = get_config('auth_oidc', 'logouturi');
                 if (!$logouturl) {
-                    $logouturl = 'https://login.microsoftonline.com/organizations/oauth2/logout?post_logout_redirect_uri=' .
+                    $logouturl = 'https://login.microsoftonline.com/common/oauth2/logout?post_logout_redirect_uri=' .
                         urlencode($CFG->wwwroot);
                 } else {
                     if (preg_match("/^https:\/\/login.microsoftonline.com\//", $logouturl) &&
@@ -330,6 +335,51 @@ class auth_plugin_oidc extends \auth_plugin_base {
                 }
 
                 redirect($logouturl);
+            }
+            if ($oidcservicesetting == 'keycloak' && $user->auth == 'oidc') {
+                $logoutUrl = get_config('auth_oidc', 'logouturi');
+                $clientId = get_config('auth_oidc', 'clientid');
+                $clientSecret = get_config('auth_oidc', 'clientsecret');
+
+                $oidctoken = $DB->get_record('auth_oidc_token', ['username' => $user->username], '*', MUST_EXIST);
+
+                // Data to send with the request
+                $postData = http_build_query([
+                    'client_id' => $clientId,
+                    'client_secret' => $clientSecret,
+                    'refresh_token' => $oidctoken->refreshtoken,
+                    'post_logout_redirect_uri' => get_login_url()
+                ], '', '&');
+
+                $curl = curl_init();
+
+                curl_setopt_array($curl, array(
+                    CURLOPT_URL => $logoutUrl,
+                    CURLOPT_RETURNTRANSFER => true,
+                    CURLOPT_ENCODING => '',
+                    CURLOPT_MAXREDIRS => 10,
+                    CURLOPT_TIMEOUT => 0,
+                    CURLOPT_FOLLOWLOCATION => true,
+                    CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+                    CURLOPT_CUSTOMREQUEST => 'POST',
+                    CURLOPT_POSTFIELDS => $postData,
+                    CURLOPT_HTTPHEADER => array(
+                        'Content-Type: application/x-www-form-urlencoded'
+                    ),
+                ));
+
+
+                $response = curl_exec($curl);
+                $httpCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+
+                curl_close($curl);
+
+                if ($httpCode == 204) {
+                    echo "OIDC: logout_success";
+                } else {
+                    echo "OIDC: logout_failed";
+                    echo "OIDC_ERROR: " . $response;
+                }
             }
         }
 
