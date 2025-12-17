@@ -30,6 +30,24 @@ function xmldb_auth_oidc_install() {
     // Set the default value for the bindingusernameclaim setting.
     $bindingusernameclaimconfig = get_config('auth_oidc', 'bindingusernameclaim');
     if (empty($bindingusernameclaimconfig)) {
-        set_config('bindingusernameclaim', 'auto', 'auth_oidc');
+        set_config('bindingusernameclaim', 'preferred_username', 'auth_oidc');
+    }
+
+    // Set the default value for the field_map_email setting.
+    $fieldmapemail = get_config('auth_oidc', 'field_map_email');
+    if (empty($fieldmapemail)) {
+        set_config('field_map_email', 'mail', 'auth_oidc');
+    }
+
+    // Set the default value for the field_map_firstname setting.
+    $fieldmapfirstname = get_config('auth_oidc', 'field_map_firstname');
+    if (empty($fieldmapfirstname)) {
+        set_config('field_map_firstname', 'givenName', 'auth_oidc');
+    }
+
+    // Set the default value for the field_map_lastname setting.
+    $fieldmaplastname = get_config('auth_oidc', 'field_map_lastname');
+    if (empty($fieldmaplastname)) {
+        set_config('field_map_lastname', 'surname', 'auth_oidc');
     }
 }

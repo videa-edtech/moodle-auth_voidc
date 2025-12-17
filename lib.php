@@ -406,6 +406,14 @@ function auth_oidc_get_field_mappings() {
         $fieldmappings['email'] = auth_oidc_apply_default_email_mapping();
     }
 
+    if (!array_key_exists('firstname', $fieldmappings)) {
+        $fieldmappings['firstname'] = auth_oidc_apply_default_firstname_mapping();
+    }
+
+    if (!array_key_exists('lastname', $fieldmappings)) {
+        $fieldmappings['lastname'] = auth_oidc_apply_default_lastname_mapping();
+    }
+
     return $fieldmappings;
 }
 
@@ -436,6 +444,70 @@ function auth_oidc_apply_default_email_mapping() {
         $fieldsetting['update_local'] = $authoidcconfig->field_updatelocal_email;
     } else {
         $fieldsetting['update_local'] = 'always';
+    }
+
+    return $fieldsetting;
+}
+
+/**
+ * Apply default firstname mapping settings.
+ *
+ * @return array
+ */
+function auth_oidc_apply_default_firstname_mapping() {
+    $existingsetting = get_config('auth_oidc', 'field_map_firstname');
+    if ($existingsetting != 'firstname') {
+        add_to_config_log('field_map_firstname', $existingsetting, 'firstname', 'auth_oidc');
+    }
+    set_config('field_map_firstname', 'givenName', 'auth_oidc');
+
+    $authoidcconfig = get_config('auth_oidc');
+
+    $fieldsetting = [];
+    $fieldsetting['field_map'] = 'givenName';
+
+    if (property_exists($authoidcconfig, 'field_lock_firstname')) {
+        $fieldsetting['field_lock'] = $authoidcconfig->field_lock_firstname;
+    } else {
+        $fieldsetting['field_lock'] = 'unlocked';
+    }
+
+    if (property_exists($authoidcconfig, 'field_updatelocal_firstname')) {
+        $fieldsetting['update_local'] = $authoidcconfig->field_updatelocal_firstname;
+    } else {
+        $fieldsetting['update_local'] = 'oncreate';
+    }
+
+    return $fieldsetting;
+}
+
+/**
+ * Apply default lastname mapping settings.
+ *
+ * @return array
+ */
+function auth_oidc_apply_default_lastname_mapping() {
+    $existingsetting = get_config('auth_oidc', 'field_map_lastname');
+    if ($existingsetting != 'surname') {
+        add_to_config_log('field_map_lastname', $existingsetting, 'surname', 'auth_oidc');
+    }
+    set_config('field_map_lastname', 'surname', 'auth_oidc');
+
+    $authoidcconfig = get_config('auth_oidc');
+
+    $fieldsetting = [];
+    $fieldsetting['field_map'] = 'surname';
+
+    if (property_exists($authoidcconfig, 'field_lock_lastname')) {
+        $fieldsetting['field_lock'] = $authoidcconfig->field_lock_lastname;
+    } else {
+        $fieldsetting['field_lock'] = 'unlocked';
+    }
+
+    if (property_exists($authoidcconfig, 'field_updatelocal_lastname')) {
+        $fieldsetting['update_local'] = $authoidcconfig->field_updatelocal_lastname;
+    } else {
+        $fieldsetting['update_local'] = 'oncreate';
     }
 
     return $fieldsetting;
