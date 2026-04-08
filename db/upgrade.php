@@ -338,5 +338,70 @@ function xmldb_auth_voidc_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2024100702, 'auth', 'voidc');
     }
 
+    if ($oldversion < 2026040800) {
+        // Define table auth_voidc_clients to be created.
+        $table = new xmldb_table('auth_voidc_clients');
+
+        // Adding fields to table auth_voidc_clients.
+        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
+        $table->add_field('name', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('idptype', XMLDB_TYPE_INTEGER, '2', null, XMLDB_NOTNULL, null, '0');
+        $table->add_field('clientid', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('clientauthmethod', XMLDB_TYPE_INTEGER, '2', null, XMLDB_NOTNULL, null, '1');
+        $table->add_field('clientsecret', XMLDB_TYPE_TEXT, null, null, null, null, null);
+        $table->add_field('clientprivatekey', XMLDB_TYPE_TEXT, null, null, null, null, null);
+        $table->add_field('clientcert', XMLDB_TYPE_TEXT, null, null, null, null, null);
+        $table->add_field('authendpoint', XMLDB_TYPE_TEXT, null, null, XMLDB_NOTNULL, null, null);
+        $table->add_field('tokenendpoint', XMLDB_TYPE_TEXT, null, null, XMLDB_NOTNULL, null, null);
+        $table->add_field('oidcresource', XMLDB_TYPE_CHAR, '255', null, null, null, null);
+        $table->add_field('oidcscope', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, 'openid profile email');
+        $table->add_field('icon', XMLDB_TYPE_CHAR, '255', null, null, null, null);
+        $table->add_field('sortorder', XMLDB_TYPE_INTEGER, '5', null, XMLDB_NOTNULL, null, '0');
+        $table->add_field('enabled', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '1');
+        $table->add_field('timecreated', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('timemodified', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+
+        // Adding keys to table auth_voidc_clients.
+        $table->add_key('primary', XMLDB_KEY_PRIMARY, ['id']);
+
+        // Adding indexes to table auth_voidc_clients.
+        $table->add_index('enabled', XMLDB_INDEX_NOTUNIQUE, ['enabled']);
+        $table->add_index('sortorder', XMLDB_INDEX_NOTUNIQUE, ['sortorder']);
+
+        // Conditionally launch create table for auth_voidc_clients.
+        if (!$dbman->table_exists($table)) {
+            $dbman->create_table($table);
+        }
+
+        // Define field clientid to be added to auth_voidc_token.
+        $table = new xmldb_table('auth_voidc_token');
+        $field = new xmldb_field('clientid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0', 'idtoken');
+
+        // Conditionally launch add field clientid.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Define index clientid (not unique) to be added to auth_voidc_token.
+        $index = new xmldb_index('clientid', XMLDB_INDEX_NOTUNIQUE, ['clientid']);
+
+        // Conditionally launch add index clientid.
+        if (!$dbman->index_exists($table, $index)) {
+            $dbman->add_index($table, $index);
+        }
+
+        // Define field clientid to be added to auth_voidc_state.
+        $table = new xmldb_table('auth_voidc_state');
+        $field = new xmldb_field('clientid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0', 'additionaldata');
+
+        // Conditionally launch add field clientid.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Voidc savepoint reached.
+        upgrade_plugin_savepoint(true, 2026040800, 'auth', 'voidc');
+    }
+
     return true;
 }

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<XMLDB PATH="auth/voidc/db" VERSION="20241127" COMMENT="XMLDB file for Moodle auth/voidc plugin"
+<XMLDB PATH="auth/voidc/db" VERSION="20260408" COMMENT="XMLDB file for Moodle auth/voidc plugin"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:noNamespaceSchemaLocation="../../../lib/xmldb/xmldb.xsd"
 >
@@ -26,6 +26,7 @@
         <FIELD NAME="nonce" TYPE="char" LENGTH="15" NOTNULL="true" SEQUENCE="false" COMMENT="nonce"/>
         <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="time login initiated"/>
         <FIELD NAME="additionaldata" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="additional stored parameters"/>
+        <FIELD NAME="clientid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="FK to auth_voidc_clients.id"/>
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
@@ -50,6 +51,7 @@
         <FIELD NAME="expiry" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="token expiry"/>
         <FIELD NAME="refreshtoken" TYPE="text" NOTNULL="true" SEQUENCE="false" COMMENT="refresh token"/>
         <FIELD NAME="idtoken" TYPE="text" NOTNULL="true" SEQUENCE="false" COMMENT="id token"/>
+        <FIELD NAME="clientid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="FK to auth_voidc_clients.id"/>
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
@@ -58,6 +60,35 @@
         <INDEX NAME="oidcuniqid" UNIQUE="false" FIELDS="oidcuniqid"/>
         <INDEX NAME="userid" UNIQUE="false" FIELDS="userid"/>
         <INDEX NAME="username" UNIQUE="false" FIELDS="username"/>
+        <INDEX NAME="clientid" UNIQUE="false" FIELDS="clientid"/>
+      </INDEXES>
+    </TABLE>
+    <TABLE NAME="auth_voidc_clients" COMMENT="Stores multiple OIDC client configurations.">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="name" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false" COMMENT="Display name shown on login page"/>
+        <FIELD NAME="idptype" TYPE="int" LENGTH="2" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="IDP type: 0=Other, 1=Microsoft Entra, 2=Microsoft Identity Platform"/>
+        <FIELD NAME="clientid" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false" COMMENT="OAuth2 client ID"/>
+        <FIELD NAME="clientauthmethod" TYPE="int" LENGTH="2" NOTNULL="true" DEFAULT="1" SEQUENCE="false" COMMENT="Auth method: 1=secret, 2=certificate"/>
+        <FIELD NAME="clientsecret" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="Client secret (encrypted)"/>
+        <FIELD NAME="clientprivatekey" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="Client private key for cert auth (encrypted)"/>
+        <FIELD NAME="clientcert" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="Client certificate for cert auth"/>
+        <FIELD NAME="authendpoint" TYPE="text" NOTNULL="true" SEQUENCE="false" COMMENT="Authorization endpoint URL"/>
+        <FIELD NAME="tokenendpoint" TYPE="text" NOTNULL="true" SEQUENCE="false" COMMENT="Token endpoint URL"/>
+        <FIELD NAME="oidcresource" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false" COMMENT="Token resource/audience"/>
+        <FIELD NAME="oidcscope" TYPE="char" LENGTH="255" NOTNULL="true" DEFAULT="openid profile email" SEQUENCE="false" COMMENT="Requested scopes"/>
+        <FIELD NAME="icon" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false" COMMENT="Icon component:key"/>
+        <FIELD NAME="sortorder" TYPE="int" LENGTH="5" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Order on login page"/>
+        <FIELD NAME="enabled" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="1" SEQUENCE="false" COMMENT="1=enabled, 0=disabled"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="enabled" UNIQUE="false" FIELDS="enabled"/>
+        <INDEX NAME="sortorder" UNIQUE="false" FIELDS="sortorder"/>
       </INDEXES>
     </TABLE>
     <TABLE NAME="auth_voidc_sid" COMMENT="Stores sid from IdP, to be used to find connected Moodle users when SLO is triggered from IdP.">
