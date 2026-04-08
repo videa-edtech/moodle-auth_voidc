@@ -17,13 +17,13 @@
 /**
  * Privacy subsystem implementation.
  *
- * @package auth_oidc
+ * @package auth_voidc
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
-namespace auth_oidc\privacy;
+namespace auth_voidc\privacy;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -35,18 +35,18 @@ use core_privacy\local\request\writer;
 /**
  * Interface for handling user lists in the OIDC authentication plugin.
  *
- * @package auth_oidc
+ * @package auth_voidc
  */
-interface auth_oidc_userlist extends \core_privacy\local\request\core_userlist_provider {
+interface auth_voidc_userlist extends \core_privacy\local\request\core_userlist_provider {
 };
 
 /**
- * Privacy provider for auth_oidc.
+ * Privacy provider for auth_voidc.
  */
 class provider implements
     \core_privacy\local\request\plugin\provider,
     \core_privacy\local\metadata\provider,
-    auth_oidc_userlist {
+    auth_voidc_userlist {
 
     /**
      * Returns meta data about this system.
@@ -57,12 +57,12 @@ class provider implements
     public static function get_metadata(collection $collection): collection {
 
         $tables = [
-            'auth_oidc_prevlogin' => [
+            'auth_voidc_prevlogin' => [
                 'userid',
                 'method',
                 'password',
             ],
-            'auth_oidc_token' => [
+            'auth_voidc_token' => [
                 'oidcuniqid',
                 'username',
                 'userid',
@@ -103,14 +103,14 @@ class provider implements
         $contextlist = new \core_privacy\local\request\contextlist();
 
         $sql = "SELECT ctx.id
-                  FROM {auth_oidc_token} tk
+                  FROM {auth_voidc_token} tk
                   JOIN {context} ctx ON ctx.instanceid = tk.userid AND ctx.contextlevel = :contextlevel
                  WHERE tk.userid = :userid";
         $params = ['userid' => $userid, 'contextlevel' => CONTEXT_USER];
         $contextlist->add_from_sql($sql, $params);
 
         $sql = "SELECT ctx.id
-                  FROM {auth_oidc_prevlogin} pv
+                  FROM {auth_voidc_prevlogin} pv
                   JOIN {context} ctx ON ctx.instanceid = pv.userid AND ctx.contextlevel = :contextlevel
                  WHERE pv.userid = :userid";
         $params = ['userid' => $userid, 'contextlevel' => CONTEXT_USER];
@@ -137,7 +137,7 @@ class provider implements
         ];
 
         $sql = "SELECT ctx.instanceid as userid
-                  FROM {auth_oidc_prevlogin} pl
+                  FROM {auth_voidc_prevlogin} pl
                   JOIN {context} ctx
                        ON ctx.instanceid = pl.userid
                        AND ctx.contextlevel = :contextuser
@@ -145,7 +145,7 @@ class provider implements
         $userlist->add_from_sql('userid', $sql, $params);
 
         $sql = "SELECT ctx.instanceid as userid
-                  FROM {auth_oidc_token} tk
+                  FROM {auth_voidc_token} tk
                   JOIN {context} ctx
                        ON ctx.instanceid = tk.userid
                        AND ctx.contextlevel = :contextuser
@@ -167,8 +167,8 @@ class provider implements
             $records = $DB->get_recordset($table, $filterparams);
             foreach ($records as $record) {
                 writer::with_context($context)->export_data([
-                    get_string('privacy:metadata:auth_oidc', 'auth_oidc'),
-                    get_string('privacy:metadata:'.$table, 'auth_oidc'),
+                    get_string('privacy:metadata:auth_voidc', 'auth_voidc'),
+                    get_string('privacy:metadata:'.$table, 'auth_voidc'),
                 ], $record);
             }
         }
@@ -182,8 +182,8 @@ class provider implements
      */
     protected static function get_table_user_map(\stdClass $user): array {
         $tables = [
-            'auth_oidc_prevlogin' => ['userid' => $user->id],
-            'auth_oidc_token' => ['userid' => $user->id],
+            'auth_voidc_prevlogin' => ['userid' => $user->id],
+            'auth_voidc_token' => ['userid' => $user->id],
         ];
         return $tables;
     }
@@ -222,8 +222,8 @@ class provider implements
      */
     private static function delete_user_data(int $userid) {
         global $DB;
-        $DB->delete_records('auth_oidc_prevlogin', ['userid' => $userid]);
-        $DB->delete_records('auth_oidc_token', ['userid' => $userid]);
+        $DB->delete_records('auth_voidc_prevlogin', ['userid' => $userid]);
+        $DB->delete_records('auth_voidc_token', ['userid' => $userid]);
     }
 
     /**

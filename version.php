@@ -17,7 +17,7 @@
 /**
  * Plugin version information.
  *
- * @package auth_oidc
+ * @package auth_voidc
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
@@ -28,5 +28,5 @@ defined('MOODLE_INTERNAL') || die();
 $plugin->version = 2024100710.01;
 $plugin->requires = 2024100700;
 $plugin->release = '4.5.2';
-$plugin->component = 'auth_oidc';
+$plugin->component = 'auth_voidc';
 $plugin->maturity = MATURITY_STABLE;

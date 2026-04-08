@@ -17,7 +17,7 @@
 /**
  * Authentication landing page.
  *
- * @package auth_oidc
+ * @package auth_voidc
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
@@ -28,5 +28,5 @@ require_once(__DIR__.'/../../config.php');
 require_once(__DIR__.'/auth.php');
 
 $auth = new \auth_plugin_oidc('authcode');
-$auth->set_httpclient(new \auth_oidc\httpclient());
+$auth->set_httpclient(new \auth_voidc\httpclient());
 $auth->handleredirect();

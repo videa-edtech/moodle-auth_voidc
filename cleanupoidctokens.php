@@ -17,7 +17,7 @@
 /**
  * Admin page to cleanup oidc tokens.
  *
- * @package auth_oidc
+ * @package auth_voidc
  * @author Lai Wei <lai.wei@enovation.ie>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
@@ -32,18 +32,18 @@ require_login();
 $context = context_system::instance();
 $pageurl = new moodle_url('/auth/oidc/cleanupoidctokens.php');
 
-admin_externalpage_setup('auth_oidc_cleanup_oidc_tokens');
+admin_externalpage_setup('auth_voidc_cleanup_oidc_tokens');
 
 require_admin();
 
 $PAGE->set_url($pageurl);
 $PAGE->set_context($context);
 $PAGE->set_pagelayout('admin');
-$PAGE->set_heading(get_string('cleanup_oidc_tokens', 'auth_oidc'));
-$PAGE->set_title(get_string('cleanup_oidc_tokens', 'auth_oidc'));
+$PAGE->set_heading(get_string('cleanup_oidc_tokens', 'auth_voidc'));
+$PAGE->set_title(get_string('cleanup_oidc_tokens', 'auth_voidc'));
 
-$emptyuseridtokens = auth_oidc_get_tokens_with_empty_ids();
-$mismatchedtokens = auth_oidc_get_tokens_with_mismatched_usernames();
+$emptyuseridtokens = auth_voidc_get_tokens_with_empty_ids();
+$mismatchedtokens = auth_voidc_get_tokens_with_mismatched_usernames();
 
 $tokenstoclean = $emptyuseridtokens + $mismatchedtokens;
 
@@ -54,22 +54,22 @@ uasort($tokenstoclean, function($a, $b) {
 $deletetokenid = optional_param('id', 0, PARAM_INT);
 if ($deletetokenid) {
     if (array_key_exists($deletetokenid, $tokenstoclean)) {
-        auth_oidc_delete_token($deletetokenid);
+        auth_voidc_delete_token($deletetokenid);
 
-        redirect($pageurl, get_string('token_deleted', 'auth_oidc'));
+        redirect($pageurl, get_string('token_deleted', 'auth_voidc'));
     }
 }
 
 if ($tokenstoclean) {
     $table = new html_table();
     $table->head = [
-        get_string('table_token_id', 'auth_oidc'),
-        get_string('table_oidc_username', 'auth_oidc'),
-        get_string('table_oidc_unique_identifier', 'auth_oidc'),
-        get_string('table_token_unique_id', 'auth_oidc'),
-        get_string('table_matching_status', 'auth_oidc'),
-        get_string('table_matching_details', 'auth_oidc'),
-        get_string('table_action', 'auth_oidc'),
+        get_string('table_token_id', 'auth_voidc'),
+        get_string('table_oidc_username', 'auth_voidc'),
+        get_string('table_oidc_unique_identifier', 'auth_voidc'),
+        get_string('table_token_unique_id', 'auth_voidc'),
+        get_string('table_matching_status', 'auth_voidc'),
+        get_string('table_matching_details', 'auth_voidc'),
+        get_string('table_action', 'auth_voidc'),
     ];
     $table->colclasses = [
         'leftalign',
@@ -101,7 +101,7 @@ echo $OUTPUT->header();
 if ($tokenstoclean) {
     echo html_writer::table($table);
 } else {
-    echo html_writer::span(get_string('no_token_to_cleanup', 'auth_oidc'));
+    echo html_writer::span(get_string('no_token_to_cleanup', 'auth_voidc'));
 }
 
 echo $OUTPUT->footer();

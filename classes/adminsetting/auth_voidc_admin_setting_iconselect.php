@@ -17,18 +17,18 @@
 /**
  * Definition of an icon selector admin setting control.
  *
- * @package auth_oidc
+ * @package auth_voidc
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
-namespace auth_oidc\adminsetting;
+namespace auth_voidc\adminsetting;
 
 /**
  * Choose an icon for the identity provider entry on the login page.
  */
-class auth_oidc_admin_setting_iconselect extends \admin_setting {
+class auth_voidc_admin_setting_iconselect extends \admin_setting {
     /** @var array The stock icons. */
     protected $choices = [];
 

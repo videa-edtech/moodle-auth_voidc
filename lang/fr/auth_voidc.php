@@ -17,7 +17,7 @@
 /**
  * French language strings.
  *
- * @package auth_oidc
+ * @package auth_voidc
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @author Lai Wei <lai.wei@enovation.ie>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -28,7 +28,7 @@
 // phpcs:disable moodle.Files.LangFilesOrdering.UnexpectedComment
 
 $string['pluginname'] = 'OpenID Connect';
-$string['auth_oidcdescription'] = 'Le plug-in OpenID Connect fournit une fonctionnalité SSO avec des fournisseurs d\'identité configurables.';
+$string['auth_voidcdescription'] = 'Le plug-in OpenID Connect fournit une fonctionnalité SSO avec des fournisseurs d\'identité configurables.';
 
 $string['cfg_authendpoint_key'] = 'Point d\'accès d\'autorisation';
 $string['cfg_authendpoint_desc'] = 'URI du point d\'accès d\'autorisation de votre fournisseur d\'identité à utiliser.';
@@ -132,23 +132,23 @@ $string['oidc:manageconnection'] = 'Permettre la connexion et la déconnexion Op
 $string['oidc:manageconnectionconnect'] = 'Permettre la connexion OpenID';
 $string['oidc:manageconnectiondisconnect'] = 'Permettre la déconnexion OpenID';
 
-$string['privacy:metadata:auth_oidc'] = 'Authentification OpenID Connect';
-$string['privacy:metadata:auth_oidc_prevlogin'] = 'Méthodes de connexion précédentes pour annuler les connexions Microsoft 365';
-$string['privacy:metadata:auth_oidc_prevlogin:userid'] = 'L\'identifiant de l\'utilisateur Moodle';
-$string['privacy:metadata:auth_oidc_prevlogin:method'] = 'La méthode de connexion précédente';
-$string['privacy:metadata:auth_oidc_prevlogin:password'] = 'Le mot de passe précédent de l\'utilisateur (chiffré)';
-$string['privacy:metadata:auth_oidc_token'] = 'Jetons OpenID Connect';
-$string['privacy:metadata:auth_oidc_token:oidcuniqid'] = 'L\'identifiant utilisateur unique de OIDCs';
-$string['privacy:metadata:auth_oidc_token:username'] = 'Le nom d\'utilisateur de l\'utilisateur Moodle';
-$string['privacy:metadata:auth_oidc_token:userid'] = 'Le ID de l\'utilisateur Moodle';
-$string['privacy:metadata:auth_oidc_token:oidcusername'] = 'Le nom d\'utilisateur de l\'utilisateur OIDC';
-$string['privacy:metadata:auth_oidc_token:scope'] = 'La portée du jeton';
-$string['privacy:metadata:auth_oidc_token:tokenresource'] = 'La ressource du jeton';
-$string['privacy:metadata:auth_oidc_token:authcode'] = 'Le code d\'authentification du jeton';
-$string['privacy:metadata:auth_oidc_token:token'] = 'Le jeton';
-$string['privacy:metadata:auth_oidc_token:expiry'] = 'L\'expiration du jeton';
-$string['privacy:metadata:auth_oidc_token:refreshtoken'] = 'Le jeton de rafraîchissement';
-$string['privacy:metadata:auth_oidc_token:idtoken'] = 'Le jeton ID';
+$string['privacy:metadata:auth_voidc'] = 'Authentification OpenID Connect';
+$string['privacy:metadata:auth_voidc_prevlogin'] = 'Méthodes de connexion précédentes pour annuler les connexions Microsoft 365';
+$string['privacy:metadata:auth_voidc_prevlogin:userid'] = 'L\'identifiant de l\'utilisateur Moodle';
+$string['privacy:metadata:auth_voidc_prevlogin:method'] = 'La méthode de connexion précédente';
+$string['privacy:metadata:auth_voidc_prevlogin:password'] = 'Le mot de passe précédent de l\'utilisateur (chiffré)';
+$string['privacy:metadata:auth_voidc_token'] = 'Jetons OpenID Connect';
+$string['privacy:metadata:auth_voidc_token:oidcuniqid'] = 'L\'identifiant utilisateur unique de OIDCs';
+$string['privacy:metadata:auth_voidc_token:username'] = 'Le nom d\'utilisateur de l\'utilisateur Moodle';
+$string['privacy:metadata:auth_voidc_token:userid'] = 'Le ID de l\'utilisateur Moodle';
+$string['privacy:metadata:auth_voidc_token:oidcusername'] = 'Le nom d\'utilisateur de l\'utilisateur OIDC';
+$string['privacy:metadata:auth_voidc_token:scope'] = 'La portée du jeton';
+$string['privacy:metadata:auth_voidc_token:tokenresource'] = 'La ressource du jeton';
+$string['privacy:metadata:auth_voidc_token:authcode'] = 'Le code d\'authentification du jeton';
+$string['privacy:metadata:auth_voidc_token:token'] = 'Le jeton';
+$string['privacy:metadata:auth_voidc_token:expiry'] = 'L\'expiration du jeton';
+$string['privacy:metadata:auth_voidc_token:refreshtoken'] = 'Le jeton de rafraîchissement';
+$string['privacy:metadata:auth_voidc_token:idtoken'] = 'Le jeton ID';
 
 // Dans les chaînes suivantes, $a réfère à un nom personnalisable pour le gestionnaire d'identité. Par exemple, ce pourrait être
 // "Microsoft 365", "OpenID Connect", etc.

@@ -17,7 +17,7 @@
 /**
  * Dutch language strings.
  *
- * @package auth_oidc
+ * @package auth_voidc
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @author Lai Wei <lai.wei@enovation.ie>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -28,7 +28,7 @@
 // phpcs:disable moodle.Files.LangFilesOrdering.UnexpectedComment
 
 $string['pluginname'] = 'OpenID Connect';
-$string['auth_oidcdescription'] = 'De OpenID Connect-plugin verschaft de mogelijkheid voor eenmalige aanmelding met configureerbare identiteitsproviders.';
+$string['auth_voidcdescription'] = 'De OpenID Connect-plugin verschaft de mogelijkheid voor eenmalige aanmelding met configureerbare identiteitsproviders.';
 $string['cfg_authendpoint_key'] = 'Autorisatie-eindpunt';
 $string['cfg_authendpoint_desc'] = 'De URI van het token-eindpunt van je identiteitsprovider die je moet gebruiken.';
 $string['cfg_autoappend_key'] = 'Automatisch toevoegen';

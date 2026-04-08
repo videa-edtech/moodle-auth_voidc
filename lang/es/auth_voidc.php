@@ -17,7 +17,7 @@
 /**
  * Spanish language strings.
  *
- * @package auth_oidc
+ * @package auth_voidc
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @author Lai Wei <lai.wei@enovation.ie>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -28,7 +28,7 @@
 // phpcs:disable moodle.Files.LangFilesOrdering.UnexpectedComment
 
 $string['pluginname'] = 'OpenID Connect';
-$string['auth_oidcdescription'] = 'El complemento OpenID Connect ofrece funcionalidad de inicio de sesión único a través de proveedores de identidad configurables.';
+$string['auth_voidcdescription'] = 'El complemento OpenID Connect ofrece funcionalidad de inicio de sesión único a través de proveedores de identidad configurables.';
 $string['cfg_authendpoint_key'] = 'Extremo de autorización';
 $string['cfg_authendpoint_desc'] = 'La URI del extremo de autorización del proveedor de identidad que va a utilizar.';
 $string['cfg_autoappend_key'] = 'Anexo automático';

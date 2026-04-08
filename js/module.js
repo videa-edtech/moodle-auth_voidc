@@ -1,8 +1,8 @@
 /*global $, M, sessionStorage*/
 
-M.auth_oidc = {};
+M.auth_voidc = {};
 
-M.auth_oidc.init = function(Y, idptype_ms, authmethodsecret, authmethodcertificate, authmethodcertificatetext) {
+M.auth_voidc.init = function(Y, idptype_ms, authmethodsecret, authmethodcertificate, authmethodcertificatetext) {
     var $idptype = $("#id_idptype");
     var $clientauthmethod = $("#id_clientauthmethod");
     var $clientsecret = $("#id_clientsecret");

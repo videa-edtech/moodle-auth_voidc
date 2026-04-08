@@ -17,7 +17,7 @@
 /**
  * OpenID Connect authentication plugin declaration.
  *
- * @package auth_oidc
+ * @package auth_voidc
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
@@ -38,7 +38,7 @@ class auth_plugin_oidc extends \auth_plugin_base {
     /** @var object Plugin config. */
     public $config;
 
-    /** @var object extending \auth_oidc\loginflow\base */
+    /** @var object extending \auth_voidc\loginflow\base */
     public $loginflow;
 
     /**
@@ -58,17 +58,17 @@ class auth_plugin_oidc extends \auth_plugin_base {
             if (!empty($forceloginflow) && is_string($forceloginflow)) {
                 $loginflow = $forceloginflow;
             } else {
-                $configuredloginflow = get_config('auth_oidc', 'loginflow');
+                $configuredloginflow = get_config('auth_voidc', 'loginflow');
                 if (!empty($configuredloginflow)) {
                     $loginflow = $configuredloginflow;
                 }
             }
         }
-        $loginflowclass = '\auth_oidc\loginflow\\'.$loginflow;
+        $loginflowclass = '\auth_voidc\loginflow\\'.$loginflow;
         if (class_exists($loginflowclass)) {
             $this->loginflow = new $loginflowclass($this->config);
         } else {
-            throw new moodle_exception('errorbadloginflow', 'auth_oidc');
+            throw new moodle_exception('errorbadloginflow', 'auth_voidc');
         }
         $this->config = $this->loginflow->config;
     }
@@ -95,10 +95,10 @@ class auth_plugin_oidc extends \auth_plugin_base {
     /**
      * Set an HTTP client to use.
      *
-     * @param \auth_oidc\httpclientinterface $httpclient
+     * @param \auth_voidc\httpclientinterface $httpclient
      * @return mixed
      */
-    public function set_httpclient(\auth_oidc\httpclientinterface $httpclient) {
+    public function set_httpclient(\auth_voidc\httpclientinterface $httpclient) {
         return $this->loginflow->set_httpclient($httpclient);
     }
 
@@ -147,8 +147,8 @@ class auth_plugin_oidc extends \auth_plugin_base {
         }
 
         // If the user is redirectred to the login page immediately after logging out, don't redirect.
-        $silentloginmodesetting = get_config('auth_oidc', 'silentloginmode');
-        $forceredirectsetting = get_config('auth_oidc', 'forceredirect');
+        $silentloginmodesetting = get_config('auth_voidc', 'silentloginmode');
+        $forceredirectsetting = get_config('auth_voidc', 'forceredirect');
         $forceloginsetting = get_config('core', 'forcelogin');
         if ($silentloginmodesetting && $forceredirectsetting && $forceloginsetting && isset($_SERVER['HTTP_REFERER']) &&
             strpos($_SERVER['HTTP_REFERER'], $CFG->wwwroot) !== false) {
@@ -260,26 +260,26 @@ class auth_plugin_oidc extends \auth_plugin_base {
     public function user_authenticated_hook(&$user, $username, $password) {
         global $DB;
         if (!empty($user) && !empty($user->auth) && $user->auth === 'oidc') {
-            $tokenrec = $DB->get_record('auth_oidc_token', ['userid' => $user->id]);
+            $tokenrec = $DB->get_record('auth_voidc_token', ['userid' => $user->id]);
             if (!empty($tokenrec)) {
                 // If the token record username is out of sync (ie username changes), update it.
                 if ($tokenrec->username != $user->username) {
                     $updatedtokenrec = new \stdClass;
                     $updatedtokenrec->id = $tokenrec->id;
                     $updatedtokenrec->username = $user->username;
-                    $DB->update_record('auth_oidc_token', $updatedtokenrec);
+                    $DB->update_record('auth_voidc_token', $updatedtokenrec);
                     $tokenrec = $updatedtokenrec;
                 }
             } else {
                 // There should always be a token record here, so a failure here means
                 // the user's token record doesn't yet contain their userid.
-                $tokenrec = $DB->get_record('auth_oidc_token', ['username' => $username]);
+                $tokenrec = $DB->get_record('auth_voidc_token', ['username' => $username]);
                 if (!empty($tokenrec)) {
                     $tokenrec->userid = $user->id;
                     $updatedtokenrec = new \stdClass;
                     $updatedtokenrec->id = $tokenrec->id;
                     $updatedtokenrec->userid = $user->id;
-                    $DB->update_record('auth_oidc_token', $updatedtokenrec);
+                    $DB->update_record('auth_voidc_token', $updatedtokenrec);
                     $tokenrec = $updatedtokenrec;
                 }
             }
@@ -289,7 +289,7 @@ class auth_plugin_oidc extends \auth_plugin_base {
                 'userid' => $user->id,
                 'other' => ['username' => $user->username],
             ];
-            $event = \auth_oidc\event\user_loggedin::create($eventdata);
+            $event = \auth_voidc\event\user_loggedin::create($eventdata);
             $event->trigger();
         }
     }
@@ -304,15 +304,15 @@ class auth_plugin_oidc extends \auth_plugin_base {
     public function postlogout_hook($user) {
         global $CFG, $DB;
 
-        $singlesignoutsetting = get_config('auth_oidc', 'single_sign_off');
-        $oidcservicesetting = get_config('auth_oidc', 'oidc_service');
+        $singlesignoutsetting = get_config('auth_voidc', 'single_sign_off');
+        $oidcservicesetting = get_config('auth_voidc', 'oidc_service');
 
         if ($singlesignoutsetting) {
             $redirect = false;
 
             if ($user->auth == 'oidc') {
                 $redirect = true;
-            } else if (auth_oidc_is_local_365_installed()) {
+            } else if (auth_voidc_is_local_365_installed()) {
                 if ($DB->record_exists('local_o365_objects', ['type' => 'user', 'moodleid' => $user->id])) {
                     $redirect = true;
                 }
@@ -323,7 +323,7 @@ class auth_plugin_oidc extends \auth_plugin_base {
             }
 
             if ($redirect) {
-                $logouturl = get_config('auth_oidc', 'logouturi');
+                $logouturl = get_config('auth_voidc', 'logouturi');
                 if (!$logouturl) {
                     $logouturl = 'https://login.microsoftonline.com/common/oauth2/logout?post_logout_redirect_uri=' .
                         urlencode($CFG->wwwroot);
@@ -337,11 +337,11 @@ class auth_plugin_oidc extends \auth_plugin_base {
                 redirect($logouturl);
             }
             if ($oidcservicesetting == 'keycloak' && $user->auth == 'oidc') {
-                $logoutUrl = get_config('auth_oidc', 'logouturi');
-                $clientId = get_config('auth_oidc', 'clientid');
-                $clientSecret = get_config('auth_oidc', 'clientsecret');
+                $logoutUrl = get_config('auth_voidc', 'logouturi');
+                $clientId = get_config('auth_voidc', 'clientid');
+                $clientSecret = get_config('auth_voidc', 'clientsecret');
 
-                $oidctoken = $DB->get_record('auth_oidc_token', ['username' => $user->username], '*', MUST_EXIST);
+                $oidctoken = $DB->get_record('auth_voidc_token', ['username' => $user->username], '*', MUST_EXIST);
 
                 // Data to send with the request
                 $postData = http_build_query([

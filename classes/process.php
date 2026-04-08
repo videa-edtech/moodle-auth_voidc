@@ -17,13 +17,13 @@
 /**
  * Process binding username claim tool.
  *
- * @package auth_oidc
+ * @package auth_voidc
  * @author Lai Wei <lai.wei@enovation.ie>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @copyright (C) 2023 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
-namespace auth_oidc;
+namespace auth_voidc;
 
 use core_text;
 use core_user;
@@ -40,11 +40,11 @@ require_once($CFG->dirroot . '/auth/oidc/lib.php');
  */
 class process {
     /**
-     * Route for renaming in auth_oidc.
+     * Route for renaming in auth_voidc.
      *
      * @var int
      */
-    const ROUTE_AUTH_OIDC_RENAME = 1;
+    const ROUTE_AUTH_VOIDC_RENAME = 1;
 
     /**
      * Route for matching other authentication methods.
@@ -87,7 +87,7 @@ class process {
             if (count($columns) != 2) {
                 $this->cir->close();
                 $this->cir->cleanup();
-                throw new moodle_exception('error_invalid_upload_file', 'auth_oidc');
+                throw new moodle_exception('error_invalid_upload_file', 'auth_voidc');
             }
 
             $stdfields = ['username', 'new_username'];
@@ -103,7 +103,7 @@ class process {
                 if (in_array($newfield, $this->filecolumns)) {
                     $this->cir->close();
                     $this->cir->cleanup();
-                    throw new moodle_exception('duplicate_upload_field', 'auth_oidc', '', $field);
+                    throw new moodle_exception('duplicate_upload_field', 'auth_voidc', '', $field);
                 }
                 $this->filecolumns[$key] = $newfield;
             }
@@ -171,7 +171,7 @@ class process {
         }
 
         if (!$username || !$lcusername || !$newusername || !$lcnewusername) {
-            $this->upt->track('status', get_string('update_error_incomplete_line', 'auth_oidc'));
+            $this->upt->track('status', get_string('update_error_incomplete_line', 'auth_voidc'));
             $this->userserrors++;
 
             return;
@@ -180,17 +180,17 @@ class process {
         $user = core_user::get_user_by_username($lcusername);
         if (!$user) {
             $user = core_user::get_user_by_email($lcusername);
-            $this->upt->track('status', get_string('update_warning_email_match', 'auth_oidc'));
+            $this->upt->track('status', get_string('update_warning_email_match', 'auth_voidc'));
         }
 
         if ($user && $user->auth == 'oidc') {
-            $route = self::ROUTE_AUTH_OIDC_RENAME;
+            $route = self::ROUTE_AUTH_VOIDC_RENAME;
         } else {
             $route = self::ROUTE_AUTH_OTHER_MATCH;
         }
 
         if ($newusername !== core_user::clean_field($newusername, 'username')) {
-            $this->upt->track('status', get_string('update_error_invalid_new_username', 'auth_oidc'));
+            $this->upt->track('status', get_string('update_error_invalid_new_username', 'auth_voidc'));
             $this->userserrors++;
 
             return;
@@ -203,8 +203,8 @@ class process {
         $authoidctokenupdated = false;
         $localo365objectupdated = false;
 
-        // Step 1: Update the user object, if route is auth_oidc rename.
-        if ($route == self::ROUTE_AUTH_OIDC_RENAME) {
+        // Step 1: Update the user object, if route is auth_voidc rename.
+        if ($route == self::ROUTE_AUTH_VOIDC_RENAME) {
             $this->upt->track('id', $user->id);
 
             $user->username = $lcnewusername;
@@ -212,7 +212,7 @@ class process {
                 user_update_user($user, false);
                 $userupdated = true;
             } catch (moodle_exception $e) {
-                $this->upt->track('status', get_string('update_error_user_update_failed', 'auth_oidc'));
+                $this->upt->track('status', get_string('update_error_user_update_failed', 'auth_voidc'));
                 $this->userserrors++;
 
                 return;
@@ -220,27 +220,27 @@ class process {
         }
 
         // Step 2: Update the token record.
-        if ($route == self::ROUTE_AUTH_OIDC_RENAME) {
-            if ($tokenrecord = $DB->get_record('auth_oidc_token', ['userid' => $user->id])) {
+        if ($route == self::ROUTE_AUTH_VOIDC_RENAME) {
+            if ($tokenrecord = $DB->get_record('auth_voidc_token', ['userid' => $user->id])) {
                 $tokenrecord->username = $lcnewusername;
                 $tokenrecord->useridentifier = $newusername;
-                $DB->update_record('auth_oidc_token', $tokenrecord);
+                $DB->update_record('auth_voidc_token', $tokenrecord);
                 $authoidctokenupdated = true;
             }
         } else {
             $sql = "SELECT *
-                      FROM {auth_oidc_token}
+                      FROM {auth_voidc_token}
                      WHERE lower(useridentifier) = ?";
             if ($tokenrecord = $DB->get_record_sql($sql, [$lcusername])) {
                 $tokenrecord->useridentifier = $newusername;
-                $DB->update_record('auth_oidc_token', $tokenrecord);
+                $DB->update_record('auth_voidc_token', $tokenrecord);
                 $authoidctokenupdated = true;
             }
         }
 
         // Step 3: Update connection record in local_o365_object table.
-        if (auth_oidc_is_local_365_installed()) {
-            if ($route == static::ROUTE_AUTH_OIDC_RENAME) {
+        if (auth_voidc_is_local_365_installed()) {
+            if ($route == static::ROUTE_AUTH_VOIDC_RENAME) {
                 if ($connectionrecord = $DB->get_record('local_o365_objects', ['type' => 'user', 'moodleid' => $user->id])) {
                     $connectionrecord->o365name = $newusername;
                     $DB->update_record('local_o365_objects', $connectionrecord);
@@ -260,22 +260,22 @@ class process {
         }
 
         if ($userupdated) {
-            $this->upt->track('status', get_string('update_success_username', 'auth_oidc'));
+            $this->upt->track('status', get_string('update_success_username', 'auth_voidc'));
         }
 
         if ($authoidctokenupdated) {
-            $this->upt->track('status', get_string('update_success_token', 'auth_oidc'));
+            $this->upt->track('status', get_string('update_success_token', 'auth_voidc'));
         }
 
         if ($localo365objectupdated) {
-            $this->upt->track('status', get_string('update_success_o365', 'auth_oidc'));
+            $this->upt->track('status', get_string('update_success_o365', 'auth_voidc'));
         }
 
         if ($userupdated || $authoidctokenupdated || $localo365objectupdated) {
             // At least one of the records has been updated.
             $this->usersupdated++;
         } else {
-            $this->upt->track('status', get_string('update_error_nothing_updated', 'auth_oidc'));
+            $this->upt->track('status', get_string('update_error_nothing_updated', 'auth_voidc'));
             $this->userserrors++;
         }
     }
@@ -288,8 +288,8 @@ class process {
     public function get_stats(): array {
         $lines = [];
 
-        $lines[] = get_string('update_stats_users_updated', 'auth_oidc', $this->usersupdated);
-        $lines[] = get_string('update_stats_users_errors', 'auth_oidc', $this->userserrors);
+        $lines[] = get_string('update_stats_users_updated', 'auth_voidc', $this->usersupdated);
+        $lines[] = get_string('update_stats_users_errors', 'auth_voidc', $this->userserrors);
 
         return $lines;
     }

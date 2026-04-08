@@ -17,13 +17,13 @@
 /**
  * A scheduled task to clean up oidc state and invalid token.
  *
- * @package auth_oidc
+ * @package auth_voidc
  * @author Lai Wei <lai.wei@enovation.ie>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @copyright (C) 2021 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
-namespace auth_oidc\task;
+namespace auth_voidc\task;
 
 use core\task\scheduled_task;
 
@@ -35,7 +35,7 @@ class cleanup_oidc_state_and_token extends scheduled_task {
      * Get a descriptive name for the task.
      */
     public function get_name() {
-        return get_string('task_cleanup_oidc_state_and_token', 'auth_oidc');
+        return get_string('task_cleanup_oidc_state_and_token', 'auth_voidc');
     }
 
     /**
@@ -45,9 +45,9 @@ class cleanup_oidc_state_and_token extends scheduled_task {
         global $DB;
 
         // Clean up oidc state.
-        $DB->delete_records_select('auth_oidc_state', 'timecreated < ?', [strtotime('-5 min')]);
+        $DB->delete_records_select('auth_voidc_state', 'timecreated < ?', [strtotime('-5 min')]);
 
         // Clean up invalid oidc token.
-        $DB->delete_records('auth_oidc_token', ['userid' => 0]);
+        $DB->delete_records('auth_voidc_token', ['userid' => 0]);
     }
 }

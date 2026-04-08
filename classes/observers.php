@@ -15,15 +15,15 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Event observer handlers for auth_oidc plugin.
+ * Event observer handlers for auth_voidc plugin.
  *
- * @package auth_oidc
+ * @package auth_voidc
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
-namespace auth_oidc;
+namespace auth_voidc;
 
 use core\event\user_deleted;
 use core\event\user_loggedout;
@@ -45,7 +45,7 @@ class observers {
     public static function handle_user_deleted(user_deleted $event) {
         global $DB;
         $userid = $event->objectid;
-        $DB->delete_records('auth_oidc_token', ['userid' => $userid]);
+        $DB->delete_records('auth_voidc_token', ['userid' => $userid]);
         return true;
     }
 }

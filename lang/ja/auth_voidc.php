@@ -17,7 +17,7 @@
 /**
  * Japanese language strings.
  *
- * @package auth_oidc
+ * @package auth_voidc
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @author Lai Wei <lai.wei@enovation.ie>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -28,7 +28,7 @@
 // phpcs:disable moodle.Files.LangFilesOrdering.UnexpectedComment
 
 $string['pluginname'] = 'OpenID Connect';
-$string['auth_oidcdescription'] = 'OpenID Connectプラグインは、設定可能なアイデンティティプロバイダを使用してシングルサインオン機能を提供します。';
+$string['auth_voidcdescription'] = 'OpenID Connectプラグインは、設定可能なアイデンティティプロバイダを使用してシングルサインオン機能を提供します。';
 $string['cfg_authendpoint_key'] = '認証エンドポイント';
 $string['cfg_authendpoint_desc'] = 'アイデンティティプロバイダが使用する認証エンドポイントのURIです。';
 $string['cfg_autoappend_key'] = '自動付加';

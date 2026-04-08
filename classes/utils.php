@@ -17,17 +17,17 @@
 /**
  * Utility functions.
  *
- * @package auth_oidc
+ * @package auth_voidc
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
-namespace auth_oidc;
+namespace auth_voidc;
 
 use Exception;
 use moodle_exception;
-use auth_oidc\event\action_failed;
+use auth_voidc\event\action_failed;
 use moodle_url;
 
 /**
@@ -46,7 +46,7 @@ class utils {
         $result = @json_decode($response, true);
         if (empty($result) || !is_array($result)) {
             self::debug('Bad response received', __METHOD__, $response);
-            throw new moodle_exception('erroroidccall', 'auth_oidc');
+            throw new moodle_exception('erroroidccall', 'auth_voidc');
         }
 
         if (isset($result['error'])) {
@@ -55,8 +55,8 @@ class utils {
             if (isset($result['error_description'])) {
                 $isadminconsent = optional_param('admin_consent', false, PARAM_BOOL);
                 if ($isadminconsent) {
-                    if (get_config('auth_oidc', 'idptype') == AUTH_OIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM &&
-                        auth_oidc_is_local_365_installed() &&
+                    if (get_config('auth_voidc', 'idptype') == AUTH_VOIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM &&
+                        auth_voidc_is_local_365_installed() &&
                         $result['error'] === 'invalid_grant' &&
                         isset($result['error_codes']) && count($result['error_codes']) == 1 &&
                         $result['error_codes'][0] == 53003) {
@@ -65,9 +65,9 @@ class utils {
                             $localo365configurationpageurl, '', $result['error_description']);
                     }
                 }
-                throw new moodle_exception('erroroidccall_message', 'auth_oidc', '', $result['error_description']);
+                throw new moodle_exception('erroroidccall_message', 'auth_voidc', '', $result['error_description']);
             } else {
-                throw new moodle_exception('erroroidccall', 'auth_oidc');
+                throw new moodle_exception('erroroidccall', 'auth_voidc');
             }
         }
 
@@ -75,7 +75,7 @@ class utils {
             if (!isset($result[$key])) {
                 $errmsg = 'Invalid structure received. No "'.$key.'"';
                 self::debug($errmsg, __METHOD__, $result);
-                throw new moodle_exception('erroroidccall', 'auth_oidc');
+                throw new moodle_exception('erroroidccall', 'auth_voidc');
             }
 
             if ($val !== null && $result[$key] !== $val) {
@@ -83,7 +83,7 @@ class utils {
                 $strval = self::tostring($val);
                 $errmsg = 'Invalid structure received. Invalid "'.$key.'". Received "'.$strreceivedval.'", expected "'.$strval.'"';
                 self::debug($errmsg, __METHOD__, $result);
-                throw new moodle_exception('erroroidccall', 'auth_oidc');
+                throw new moodle_exception('erroroidccall', 'auth_voidc');
             }
         }
         return $result;
@@ -129,7 +129,7 @@ class utils {
      * @param null $debugdata
      */
     public static function debug($message, $where = '', $debugdata = null) {
-        $debugmode = (bool)get_config('auth_oidc', 'debugmode');
+        $debugmode = (bool)get_config('auth_voidc', 'debugmode');
         if ($debugmode === true) {
             $debugbacktrace = debug_backtrace();
             $debugbacktracechecksum = md5(json_encode($debugbacktrace));
@@ -206,7 +206,7 @@ class utils {
      * @return string|bool cert path if exists otherwise false
      */
     public static function get_certpath() {
-        $clientcertfile = get_config('auth_oidc', 'clientcertfile');
+        $clientcertfile = get_config('auth_voidc', 'clientcertfile');
         $certlocation = self::get_openssl_internal_path();
         $certfile = "$certlocation/$clientcertfile";
 
@@ -223,7 +223,7 @@ class utils {
      * @return string|bool key path if exists otherwise false
      */
     public static function get_keypath() {
-        $clientprivatekeyfile = get_config('auth_oidc', 'clientprivatekeyfile');
+        $clientprivatekeyfile = get_config('auth_voidc', 'clientprivatekeyfile');
         $keylocation = self::get_openssl_internal_path();
         $keyfile = "$keylocation/$clientprivatekeyfile";
 

@@ -17,7 +17,7 @@
 /**
  * Plugin tasks.
  *
- * @package auth_oidc
+ * @package auth_voidc
  * @author Lai Wei <lai.wei@enovation.ie>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @copyright (C) 2021 onwards Microsoft, Inc. (http://microsoft.com/)
@@ -27,7 +27,7 @@ defined('MOODLE_INTERNAL') || die();
 
 $tasks = [
     [
-        'classname' => 'auth_oidc\task\cleanup_oidc_state_and_token',
+        'classname' => 'auth_voidc\task\cleanup_oidc_state_and_token',
         'blocking' => 0,
         'minute' => '*',
         'hour' => '*',
@@ -36,7 +36,7 @@ $tasks = [
         'month' => '*',
     ],
     [
-        'classname' => 'auth_oidc\task\cleanup_oidc_sid',
+        'classname' => 'auth_voidc\task\cleanup_oidc_sid',
         'blocking' => 0,
         'minute' => '51',
         'hour' => '*',

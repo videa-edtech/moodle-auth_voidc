@@ -17,13 +17,13 @@
 /**
  * OIDC client.
  *
- * @package auth_oidc
+ * @package auth_voidc
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
-namespace auth_oidc;
+namespace auth_voidc;
 
 use moodle_exception;
 use moodle_url;
@@ -82,7 +82,7 @@ class oidcclient {
         if (!empty($tokenresource)) {
             $this->tokenresource = $tokenresource;
         } else {
-            if (auth_oidc_is_local_365_installed()) {
+            if (auth_voidc_is_local_365_installed()) {
                 if (\local_o365\rest\o365api::use_chinese_api() === true) {
                     $this->tokenresource = 'https://microsoftgraph.chinacloudapi.cn';
                 } else {
@@ -149,7 +149,7 @@ class oidcclient {
     public function setendpoints($endpoints) {
         foreach ($endpoints as $type => $uri) {
             if (clean_param($uri, PARAM_URL) !== $uri) {
-                throw new moodle_exception('erroroidcclientinvalidendpoint', 'auth_oidc');
+                throw new moodle_exception('erroroidcclientinvalidendpoint', 'auth_voidc');
             }
             $this->endpoints[$type] = $uri;
         }
@@ -190,7 +190,7 @@ class oidcclient {
             'redirect_uri' => $this->redirecturi,
         ];
 
-        if (get_config('auth_oidc', 'idptype') != AUTH_OIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM) {
+        if (get_config('auth_voidc', 'idptype') != AUTH_VOIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM) {
             $params['resource'] = $this->tokenresource;
         }
 
@@ -199,14 +199,14 @@ class oidcclient {
         } else if ($selectaccount === true) {
             $params['prompt'] = 'select_account';
         } else {
-            $silentloginmode = get_config('auth_oidc', 'silentloginmode');
+            $silentloginmode = get_config('auth_voidc', 'silentloginmode');
             $source = optional_param('source', '', PARAM_RAW);
             if ($silentloginmode && $source != 'loginpage') {
                 $params['prompt'] = 'none';
             }
         }
 
-        $domainhint = get_config('auth_oidc', 'domainhint');
+        $domainhint = get_config('auth_voidc', 'domainhint');
         if (!empty($domainhint)) {
             $params['domain_hint'] = $domainhint;
         }
@@ -253,7 +253,7 @@ class oidcclient {
         $staterec->nonce = $nonce;
         $staterec->timecreated = time();
         $staterec->additionaldata = serialize($stateparams);
-        $DB->insert_record('auth_oidc_state', $staterec);
+        $DB->insert_record('auth_voidc_state', $staterec);
         return $staterec->state;
     }
 
@@ -268,11 +268,11 @@ class oidcclient {
     public function authrequest($promptlogin = false, array $stateparams = [], array $extraparams = [],
         bool $selectaccount = false) {
         if (empty($this->clientid)) {
-            throw new moodle_exception('erroroidcclientnocreds', 'auth_oidc');
+            throw new moodle_exception('erroroidcclientnocreds', 'auth_voidc');
         }
 
         if (empty($this->endpoints['auth'])) {
-            throw new moodle_exception('erroroidcclientnoauthendpoint', 'auth_oidc');
+            throw new moodle_exception('erroroidcclientnoauthendpoint', 'auth_voidc');
         }
 
         $params = $this->getauthrequestparams($promptlogin, $stateparams, $extraparams, $selectaccount);
@@ -303,11 +303,11 @@ class oidcclient {
      */
     public function rocredsrequest($username, $password) {
         if (empty($this->endpoints['token'])) {
-            throw new moodle_exception('erroroidcclientnotokenendpoint', 'auth_oidc');
+            throw new moodle_exception('erroroidcclientnotokenendpoint', 'auth_voidc');
         }
 
         if (strpos($this->endpoints['token'], 'https://') !== 0) {
-            throw new moodle_exception('erroroidcclientinsecuretokenendpoint', 'auth_oidc');
+            throw new moodle_exception('erroroidcclientinsecuretokenendpoint', 'auth_voidc');
         }
 
         $params = [
@@ -319,7 +319,7 @@ class oidcclient {
             'client_secret' => $this->clientsecret,
         ];
 
-        if (get_config('auth_oidc', 'idptype') != AUTH_OIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM) {
+        if (get_config('auth_voidc', 'idptype') != AUTH_VOIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM) {
             $params['resource'] = $this->tokenresource;
         }
 
@@ -340,7 +340,7 @@ class oidcclient {
      */
     public function tokenrequest($code) {
         if (empty($this->endpoints['token'])) {
-            throw new moodle_exception('erroroidcclientnotokenendpoint', 'auth_oidc');
+            throw new moodle_exception('erroroidcclientnotokenendpoint', 'auth_voidc');
         }
 
         $params = [
@@ -350,8 +350,8 @@ class oidcclient {
             'redirect_uri' => $this->redirecturi,
         ];
 
-        switch (get_config('auth_oidc', 'clientauthmethod')) {
-            case AUTH_OIDC_AUTH_METHOD_CERTIFICATE:
+        switch (get_config('auth_voidc', 'clientauthmethod')) {
+            case AUTH_VOIDC_AUTH_METHOD_CERTIFICATE:
                 $params['client_assertion_type'] = 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer';
                 $params['client_assertion'] = static::generate_client_assertion();
                 $params['tenant'] = 'common';
@@ -375,8 +375,8 @@ class oidcclient {
             'grant_type' => 'client_credentials',
         ];
 
-        switch (get_config('auth_oidc', 'clientauthmethod')) {
-            case AUTH_OIDC_AUTH_METHOD_CERTIFICATE:
+        switch (get_config('auth_voidc', 'clientauthmethod')) {
+            case AUTH_VOIDC_AUTH_METHOD_CERTIFICATE:
                 $params['client_assertion_type'] = 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer';
                 $params['client_assertion'] = static::generate_client_assertion();
                 break;
@@ -397,7 +397,7 @@ class oidcclient {
      * @throws moodle_exception
      */
     public static function generate_client_assertion(): string {
-        $authoidcconfig = get_config('auth_oidc');
+        $authoidcconfig = get_config('auth_voidc');
         $certsource = $authoidcconfig->clientcertsource;
 
         $clientcertpassphrase = null;
@@ -405,14 +405,14 @@ class oidcclient {
             $clientcertpassphrase = $authoidcconfig->clientcertpassphrase;
         }
 
-        if ($certsource == AUTH_OIDC_AUTH_CERT_SOURCE_TEXT) {
+        if ($certsource == AUTH_VOIDC_AUTH_CERT_SOURCE_TEXT) {
             $cert = openssl_x509_read($authoidcconfig->clientcert);
             $privatekey = openssl_pkey_get_private($authoidcconfig->clientprivatekey, $clientcertpassphrase);
-        } else if ($certsource == AUTH_OIDC_AUTH_CERT_SOURCE_FILE) {
+        } else if ($certsource == AUTH_VOIDC_AUTH_CERT_SOURCE_FILE) {
             $cert = openssl_x509_read(utils::get_certpath());
             $privatekey = openssl_pkey_get_private(utils::get_keypath(), $clientcertpassphrase);
         } else {
-            throw new moodle_exception('errorinvalidcertificatesource', 'auth_oidc');
+            throw new moodle_exception('errorinvalidcertificatesource', 'auth_voidc');
         }
 
         $sh1hash = openssl_x509_fingerprint($cert);

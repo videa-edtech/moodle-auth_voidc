@@ -17,19 +17,19 @@
 /**
  * A Moodle user rename attempt event.
  *
- * @package auth_oidc
+ * @package auth_voidc
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
-namespace auth_oidc\event;
+namespace auth_voidc\event;
 
 use context_system;
 use core\event\base;
 
 /**
- * Fired when a user attempts to change their username from the auth_oidc plugin.
+ * Fired when a user attempts to change their username from the auth_voidc plugin.
  */
 class user_rename_attempt extends base {
     /**
@@ -38,7 +38,7 @@ class user_rename_attempt extends base {
      * @return string
      */
     public static function get_name() {
-        return get_string('eventuserrenameattempt', 'auth_oidc');
+        return get_string('eventuserrenameattempt', 'auth_voidc');
     }
 
     /**
@@ -47,7 +47,7 @@ class user_rename_attempt extends base {
      * @return string
      */
     public function get_description() {
-        return "The auth_oidc plugin attempts to change the username of the user with id '$this->userid'.";
+        return "The auth_voidc plugin attempts to change the username of the user with id '$this->userid'.";
     }
 
     /**

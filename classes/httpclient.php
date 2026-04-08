@@ -17,22 +17,22 @@
 /**
  * HTTP clinet.
  *
- * @package auth_oidc
+ * @package auth_voidc
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
-namespace auth_oidc;
+namespace auth_voidc;
 
 defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->dirroot . '/lib/filelib.php');
 
 /**
- * Implementation of \auth_oidc\httpclientinterface using Moodle CURL.
+ * Implementation of \auth_voidc\httpclientinterface using Moodle CURL.
  */
-class httpclient extends \curl implements \auth_oidc\httpclientinterface {
+class httpclient extends \curl implements \auth_voidc\httpclientinterface {
     /**
      * Generate a client tag.
      *

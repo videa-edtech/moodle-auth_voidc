@@ -17,7 +17,7 @@
 /**
  * German language strings.
  *
- * @package auth_oidc
+ * @package auth_voidc
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @author Lai Wei <lai.wei@enovation.ie>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -28,7 +28,7 @@
 // phpcs:disable moodle.Files.LangFilesOrdering.UnexpectedComment
 
 $string['pluginname'] = 'OpenID Connect';
-$string['auth_oidcdescription'] = 'Das Plugin OpenID Connect bietet eine Single-Sign-On-Funktion mit konfigurierbaren Identitätsprovidern.';
+$string['auth_voidcdescription'] = 'Das Plugin OpenID Connect bietet eine Single-Sign-On-Funktion mit konfigurierbaren Identitätsprovidern.';
 $string['cfg_authendpoint_key'] = 'Autorisierungsendpunkt';
 $string['cfg_authendpoint_desc'] = 'Die URI des Autorisierungsendpunktes, dessen Verwendung Ihr Identitätsprovider vorschreibt.';
 $string['cfg_autoappend_key'] = 'Autom. anhängen';

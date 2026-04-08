@@ -17,13 +17,13 @@
 /**
  * Change binding username claim tool form 1.
  *
- * @package auth_oidc
+ * @package auth_voidc
  * @author Lai Wei <lai.wei@enovation.ie>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @copyright (C) 2023 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
-namespace auth_oidc\form;
+namespace auth_voidc\form;
 
 use core_text;
 use csv_import_reader;
@@ -45,13 +45,13 @@ class change_binding_username_claim_tool_form1 extends moodleform {
 
         $url = new moodle_url('/auth/oidc/example.csv');
         $link = html_writer::link($url, 'example.csv');
-        $mform->addElement('static', 'example.csv', get_string('examplecsv', 'auth_oidc'), $link);
+        $mform->addElement('static', 'example.csv', get_string('examplecsv', 'auth_voidc'), $link);
 
-        $mform->addElement('filepicker', 'usernamefile', get_string('usernamefile', 'auth_oidc'));
+        $mform->addElement('filepicker', 'usernamefile', get_string('usernamefile', 'auth_voidc'));
         $mform->addRule('usernamefile', null, 'required', null, 'client');
 
         $choices = csv_import_reader::get_delimiter_list();
-        $mform->addElement('select', 'delimiter_name', get_string('csvdelimiter', 'auth_oidc'), $choices);
+        $mform->addElement('select', 'delimiter_name', get_string('csvdelimiter', 'auth_voidc'), $choices);
         if (array_key_exists('cfg', $choices)) {
             $mform->setDefault('delimiter_name', 'cfg');
         } else if (get_string('listsep', 'langconfig') == ';') {
@@ -61,13 +61,13 @@ class change_binding_username_claim_tool_form1 extends moodleform {
         }
 
         $choices = core_text::get_encodings();
-        $mform->addElement('select', 'encoding', get_string('encoding', 'auth_oidc'), $choices);
+        $mform->addElement('select', 'encoding', get_string('encoding', 'auth_voidc'), $choices);
         $mform->setDefault('encoding', 'UTF-8');
 
         $choices = ['10' => 10, '20' => 20, '100' => 100, '1000' => 1000, '100000' => 100000];
-        $mform->addElement('select', 'previewrowsl', get_string('rowpreviewnum', 'auth_oidc'), $choices);
+        $mform->addElement('select', 'previewrowsl', get_string('rowpreviewnum', 'auth_voidc'), $choices);
         $mform->setDefault('previewrowsl', 10);
 
-        $this->add_action_buttons(false, get_string('upload_usernames', 'auth_oidc'));
+        $this->add_action_buttons(false, get_string('upload_usernames', 'auth_voidc'));
     }
 }

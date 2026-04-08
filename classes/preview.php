@@ -17,13 +17,13 @@
 /**
  * Update username feature preview table.
  *
- * @package auth_oidc
+ * @package auth_voidc
  * @author Lai Wei <lai.wei@enovation.ie>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @copyright (C) 2023 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
-namespace auth_oidc;
+namespace auth_voidc;
 
 use core_text;
 use core_user;
@@ -67,7 +67,7 @@ class preview extends html_table {
         $this->header = [];
         $this->data = $this->read_data();
 
-        $this->head[] = get_string('csvline', 'auth_oidc');
+        $this->head[] = get_string('csvline', 'auth_voidc');
         foreach ($filecolumns as $column) {
             $this->head[] = $column;
         }
@@ -97,7 +97,7 @@ class preview extends html_table {
             $rowcols['status'] = [];
 
             if (!isset($rowcols['username']) || !isset($rowcols['new_username'])) {
-                $rowcols['status'][] = get_string('update_error_incomplete_line', 'auth_oidc');
+                $rowcols['status'][] = get_string('update_error_incomplete_line', 'auth_voidc');
                 $hasfatalerror = true;
             }
 
@@ -105,17 +105,17 @@ class preview extends html_table {
             if (!$user) {
                 $user = $DB->get_record('user', ['email' => $rowcols['username']]);
                 if ($user) {
-                    $rowcols['status'][] = get_string('update_warning_email_match', 'auth_oidc');
+                    $rowcols['status'][] = get_string('update_warning_email_match', 'auth_voidc');
                 } else {
-                    $rowcols['status'][] = get_string('update_error_user_not_found', 'auth_oidc');
+                    $rowcols['status'][] = get_string('update_error_user_not_found', 'auth_voidc');
                 }
             } else if ($user->auth != 'oidc') {
-                $rowcols['status'][] = get_string('update_error_user_not_oidc', 'auth_oidc');
+                $rowcols['status'][] = get_string('update_error_user_not_oidc', 'auth_voidc');
             }
 
             $lcnewusername = core_text::strtolower($rowcols['new_username']);
             if ($lcnewusername != core_user::clean_field($lcnewusername, 'username')) {
-                $rowcols['status'][] = get_string('update_error_invalid_new_username', 'auth_oidc');
+                $rowcols['status'][] = get_string('update_error_invalid_new_username', 'auth_voidc');
                 $hasfatalerror = true;
             }
 

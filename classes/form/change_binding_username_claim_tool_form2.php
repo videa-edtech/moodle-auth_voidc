@@ -17,13 +17,13 @@
 /**
  * Change binding username claim tool form 2.
  *
- * @package auth_oidc
+ * @package auth_voidc
  * @author Lai Wei <lai.wei@enovation.ie>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @copyright (C) 2023 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
-namespace auth_oidc\form;
+namespace auth_voidc\form;
 
 use moodleform;
 
@@ -46,7 +46,7 @@ class change_binding_username_claim_tool_form2 extends moodleform {
         $mform->addElement('hidden', 'previewrows');
         $mform->setType('previewrows', PARAM_INT);
 
-        $this->add_action_buttons(true, get_string('upload_usernames', 'auth_oidc'));
+        $this->add_action_buttons(true, get_string('upload_usernames', 'auth_voidc'));
 
         $this->set_data($data);
     }

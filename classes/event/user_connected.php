@@ -17,13 +17,13 @@
 /**
  * A user ocnnects to OpenID Connect event.
  *
- * @package auth_oidc
+ * @package auth_voidc
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
-namespace auth_oidc\event;
+namespace auth_voidc\event;
 
 /**
  * Fired when a user connects to OpenID Connect.
@@ -35,7 +35,7 @@ class user_connected extends \core\event\base {
      * @return string
      */
     public static function get_name() {
-        return get_string('eventuserconnected', 'auth_oidc');
+        return get_string('eventuserconnected', 'auth_voidc');
     }
 
     /**
@@ -44,7 +44,7 @@ class user_connected extends \core\event\base {
      * @return string
      */
     public function get_description() {
-        return "The user with id '$this->userid' has switched to using OpenID Connect (auth plugin 'auth_oidc').";
+        return "The user with id '$this->userid' has switched to using OpenID Connect (auth plugin 'auth_voidc').";
     }
 
     /**

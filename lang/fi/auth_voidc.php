@@ -17,7 +17,7 @@
 /**
  * Finnish language strings.
  *
- * @package auth_oidc
+ * @package auth_voidc
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @author Lai Wei <lai.wei@enovation.ie>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -28,7 +28,7 @@
 // phpcs:disable moodle.Files.LangFilesOrdering.UnexpectedComment
 
 $string['pluginname'] = 'OpenID Connect';
-$string['auth_oidcdescription'] = 'OpenID Connect -lisäosa mahdollistaa kertakirjautumisen käyttämällä määritettävissä olevaa identiteetintarjoajaa.';
+$string['auth_voidcdescription'] = 'OpenID Connect -lisäosa mahdollistaa kertakirjautumisen käyttämällä määritettävissä olevaa identiteetintarjoajaa.';
 $string['cfg_authendpoint_key'] = 'Todennuksen päätepiste';
 $string['cfg_authendpoint_desc'] = 'Käytettävän identiteetintarjoajan todennuksen päätepisteen URI.';
 $string['cfg_autoappend_key'] = 'Lisää automaattisesti';

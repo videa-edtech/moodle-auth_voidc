@@ -17,7 +17,7 @@
 /**
  * Plugin installation script.
  *
- * @package auth_oidc
+ * @package auth_voidc
  * @author Lai Wei <lai.wei@enovation.ie>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
@@ -26,28 +26,28 @@
 /**
  * Installation script.
  */
-function xmldb_auth_oidc_install() {
+function xmldb_auth_voidc_install() {
     // Set the default value for the bindingusernameclaim setting.
-    $bindingusernameclaimconfig = get_config('auth_oidc', 'bindingusernameclaim');
+    $bindingusernameclaimconfig = get_config('auth_voidc', 'bindingusernameclaim');
     if (empty($bindingusernameclaimconfig)) {
-        set_config('bindingusernameclaim', 'preferred_username', 'auth_oidc');
+        set_config('bindingusernameclaim', 'preferred_username', 'auth_voidc');
     }
 
     // Set the default value for the field_map_email setting.
-    $fieldmapemail = get_config('auth_oidc', 'field_map_email');
+    $fieldmapemail = get_config('auth_voidc', 'field_map_email');
     if (empty($fieldmapemail)) {
-        set_config('field_map_email', 'mail', 'auth_oidc');
+        set_config('field_map_email', 'mail', 'auth_voidc');
     }
 
     // Set the default value for the field_map_firstname setting.
-    $fieldmapfirstname = get_config('auth_oidc', 'field_map_firstname');
+    $fieldmapfirstname = get_config('auth_voidc', 'field_map_firstname');
     if (empty($fieldmapfirstname)) {
-        set_config('field_map_firstname', 'givenName', 'auth_oidc');
+        set_config('field_map_firstname', 'givenName', 'auth_voidc');
     }
 
     // Set the default value for the field_map_lastname setting.
-    $fieldmaplastname = get_config('auth_oidc', 'field_map_lastname');
+    $fieldmaplastname = get_config('auth_voidc', 'field_map_lastname');
     if (empty($fieldmaplastname)) {
-        set_config('field_map_lastname', 'surname', 'auth_oidc');
+        set_config('field_map_lastname', 'surname', 'auth_voidc');
     }
 }

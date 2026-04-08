@@ -17,13 +17,13 @@
 /**
  * OIDC user created event.
  *
- * @package auth_oidc
+ * @package auth_voidc
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
-namespace auth_oidc\event;
+namespace auth_voidc\event;
 
 /**
  * Event fired when OIDC creates a new user.
@@ -35,7 +35,7 @@ class user_created extends \core\event\base {
      * @return string
      */
     public static function get_name() {
-        return get_string('eventusercreated', 'auth_oidc');
+        return get_string('eventusercreated', 'auth_voidc');
     }
 
     /**

@@ -17,16 +17,16 @@
 /**
  * Change binding username claim tool page.
  *
- * @package auth_oidc
+ * @package auth_voidc
  * @author Lai Wei <lai.wei@enovation.ie>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @copyright (C) 2023 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
-use auth_oidc\form\change_binding_username_claim_tool_form1;
-use auth_oidc\form\change_binding_username_claim_tool_form2;
-use auth_oidc\preview;
-use auth_oidc\process;
+use auth_voidc\form\change_binding_username_claim_tool_form1;
+use auth_voidc\form\change_binding_username_claim_tool_form2;
+use auth_voidc\preview;
+use auth_voidc\process;
 
 require_once(dirname(__FILE__) . '/../../config.php');
 require_once($CFG->libdir . '/adminlib.php');
@@ -38,10 +38,10 @@ $url = new moodle_url('/auth/oidc/change_binding_username_claim_tool.php');
 $PAGE->set_url($url);
 $PAGE->set_context(context_system::instance());
 $PAGE->set_pagelayout('admin');
-$PAGE->set_heading(get_string('settings_page_change_binding_username_claim_tool', 'auth_oidc'));
-$PAGE->set_title(get_string('settings_page_change_binding_username_claim_tool', 'auth_oidc'));
+$PAGE->set_heading(get_string('settings_page_change_binding_username_claim_tool', 'auth_voidc'));
+$PAGE->set_title(get_string('settings_page_change_binding_username_claim_tool', 'auth_voidc'));
 
-admin_externalpage_setup('auth_oidc_change_binding_username_claim_tool');
+admin_externalpage_setup('auth_voidc_change_binding_username_claim_tool');
 
 require_admin();
 
@@ -69,9 +69,9 @@ if (empty($iid)) {
     } else {
         echo $OUTPUT->header();
 
-        echo $OUTPUT->heading(get_string('change_binding_username_claim_tool', 'auth_oidc'));
+        echo $OUTPUT->heading(get_string('change_binding_username_claim_tool', 'auth_voidc'));
         $bindingusernameclaimurl = new moodle_url('/auth/oidc/binding_username_claim.php');
-        echo html_writer::tag('p', get_string('change_binding_username_claim_tool_description', 'auth_oidc',
+        echo html_writer::tag('p', get_string('change_binding_username_claim_tool_description', 'auth_voidc',
             $bindingusernameclaimurl->out()));
 
         $form1->display();
@@ -97,7 +97,7 @@ if ($mform2->is_cancelled()) {
 } else if ($formdata = $mform2->get_data()) {
     // Print the header.
     echo $OUTPUT->header();
-    echo $OUTPUT->heading(get_string('change_binding_username_claim_tool_result', 'auth_oidc'));
+    echo $OUTPUT->heading(get_string('change_binding_username_claim_tool_result', 'auth_voidc'));
 
     $process->set_form_data($formdata);
     $process->process();
@@ -113,7 +113,7 @@ if ($mform2->is_cancelled()) {
 // Print the header.
 echo $OUTPUT->header();
 
-echo $OUTPUT->heading(get_string('change_binding_username_claim_tool', 'auth_oidc'));
+echo $OUTPUT->heading(get_string('change_binding_username_claim_tool', 'auth_voidc'));
 
 $table = new preview($cir, $filecolumns, $previewrows);
 

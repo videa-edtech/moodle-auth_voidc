@@ -17,13 +17,13 @@
 /**
  * OIDC application configuration page.
  *
- * @package auth_oidc
+ * @package auth_voidc
  * @author Lai Wei <lai.wei@enovation.ie>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @copyright (C) 2022 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
-use auth_oidc\form\application;
+use auth_voidc\form\application;
 
 require_once(dirname(__FILE__) . '/../../config.php');
 require_once($CFG->libdir . '/adminlib.php');
@@ -35,22 +35,22 @@ $url = new moodle_url('/auth/oidc/manageapplication.php');
 $PAGE->set_url($url);
 $PAGE->set_context(context_system::instance());
 $PAGE->set_pagelayout('admin');
-$PAGE->set_heading(get_string('settings_page_application', 'auth_oidc'));
-$PAGE->set_title(get_string('settings_page_application', 'auth_oidc'));
+$PAGE->set_heading(get_string('settings_page_application', 'auth_voidc'));
+$PAGE->set_title(get_string('settings_page_application', 'auth_voidc'));
 
-$jsparams = [AUTH_OIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM, AUTH_OIDC_AUTH_METHOD_SECRET, AUTH_OIDC_AUTH_METHOD_CERTIFICATE,
-    get_string('auth_method_certificate', 'auth_oidc')];
+$jsparams = [AUTH_VOIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM, AUTH_VOIDC_AUTH_METHOD_SECRET, AUTH_VOIDC_AUTH_METHOD_CERTIFICATE,
+    get_string('auth_method_certificate', 'auth_voidc')];
 $jsmodule = [
-    'name' => 'auth_oidc',
+    'name' => 'auth_voidc',
     'fullpath' => '/auth/oidc/js/module.js',
 ];
-$PAGE->requires->js_init_call('M.auth_oidc.init', $jsparams, true, $jsmodule);
+$PAGE->requires->js_init_call('M.auth_voidc.init', $jsparams, true, $jsmodule);
 
-admin_externalpage_setup('auth_oidc_application');
+admin_externalpage_setup('auth_voidc_application');
 
 require_admin();
 
-$oidcconfig = get_config('auth_oidc');
+$oidcconfig = get_config('auth_voidc');
 
 $form = new application(null, ['oidcconfig' => $oidcconfig]);
 
@@ -71,7 +71,7 @@ if ($form->is_cancelled()) {
 } else if ($fromform = $form->get_data()) {
     // Handle odd cases where clientauthmethod is not received.
     if (!isset($fromform->clientauthmethod)) {
-        $fromform->clientauthmethod = optional_param('clientauthmethod', AUTH_OIDC_AUTH_METHOD_SECRET, PARAM_INT);
+        $fromform->clientauthmethod = optional_param('clientauthmethod', AUTH_VOIDC_AUTH_METHOD_SECRET, PARAM_INT);
     }
 
     // Prepare config settings to save.
@@ -80,19 +80,19 @@ if ($form->is_cancelled()) {
 
     // Depending on the value of clientauthmethod, save clientsecret or (clientprivatekey and clientcert).
     switch ($fromform->clientauthmethod) {
-        case AUTH_OIDC_AUTH_METHOD_SECRET:
+        case AUTH_VOIDC_AUTH_METHOD_SECRET:
             $configstosave[] = 'clientsecret';
             $configstosave[] = 'secretexpiryrecipients';
             break;
-        case AUTH_OIDC_AUTH_METHOD_CERTIFICATE:
+        case AUTH_VOIDC_AUTH_METHOD_CERTIFICATE:
             $configstosave[] = 'clientcertsource';
             $configstosave[] = 'clientcertpassphrase';
             switch ($fromform->clientcertsource) {
-                case AUTH_OIDC_AUTH_CERT_SOURCE_TEXT:
+                case AUTH_VOIDC_AUTH_CERT_SOURCE_TEXT:
                     $configstosave[] = 'clientprivatekey';
                     $configstosave[] = 'clientcert';
                     break;
-                case AUTH_OIDC_AUTH_CERT_SOURCE_FILE:
+                case AUTH_VOIDC_AUTH_CERT_SOURCE_FILE:
                     $configstosave[] = 'clientprivatekeyfile';
                     $configstosave[] = 'clientcertfile';
                     break;
@@ -104,10 +104,10 @@ if ($form->is_cancelled()) {
     $updateapplicationtokenrequired = false;
     $settingschanged = false;
     foreach ($configstosave as $config) {
-        $existingsetting = get_config('auth_oidc', $config);
+        $existingsetting = get_config('auth_voidc', $config);
         if ($fromform->$config != $existingsetting) {
-            add_to_config_log($config, $existingsetting, $fromform->$config, 'auth_oidc');
-            set_config($config, $fromform->$config, 'auth_oidc');
+            add_to_config_log($config, $existingsetting, $fromform->$config, 'auth_voidc');
+            set_config($config, $fromform->$config, 'auth_voidc');
             $settingschanged = true;
             if ($config != 'secretexpiryrecipients') {
                 $updateapplicationtokenrequired = true;
@@ -117,8 +117,8 @@ if ($form->is_cancelled()) {
 
     // Redirect destination and message depend on IdP type.
     $isgraphapiconnected = false;
-    if ($fromform->idptype != AUTH_OIDC_IDP_TYPE_OTHER) {
-        if (auth_oidc_is_local_365_installed()) {
+    if ($fromform->idptype != AUTH_VOIDC_IDP_TYPE_OTHER) {
+        if (auth_voidc_is_local_365_installed()) {
             $isgraphapiconnected = true;
         }
     }
@@ -132,14 +132,14 @@ if ($form->is_cancelled()) {
 
             // Then show the message to the user with instructions to update the application token.
             $localo365configurl = new moodle_url('/admin/settings.php', ['section' => 'local_o365']);
-            redirect($localo365configurl, get_string('application_updated_microsoft', 'auth_oidc'));
+            redirect($localo365configurl, get_string('application_updated_microsoft', 'auth_voidc'));
         } else {
-            redirect($url, get_string('application_updated', 'auth_oidc'));
+            redirect($url, get_string('application_updated', 'auth_voidc'));
         }
     } else if ($settingschanged) {
-        redirect($url, get_string('application_updated', 'auth_oidc'));
+        redirect($url, get_string('application_updated', 'auth_voidc'));
     } else {
-        redirect($url, get_string('application_not_changed', 'auth_oidc'));
+        redirect($url, get_string('application_not_changed', 'auth_voidc'));
     }
 }
 

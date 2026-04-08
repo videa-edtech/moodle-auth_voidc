@@ -17,13 +17,13 @@
 /**
  * JWT test cases.
  *
- * @package auth_oidc
+ * @package auth_voidc
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
-namespace auth_oidc;
+namespace auth_voidc;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -32,7 +32,7 @@ global $CFG;
 /**
  * Tests jwt.
  *
- * @group auth_oidc
+ * @group auth_voidc
  * @group office365
  */
 final class jwt_test extends \advanced_testcase {
@@ -114,7 +114,7 @@ final class jwt_test extends \advanced_testcase {
      * Test decode.
      *
      * @dataProvider dataprovider_decode
-     * @covers \auth_oidc\jwt::decode
+     * @covers \auth_voidc\jwt::decode
      *
      * @param string $encodedjwt The JWT token to be decoded.
      * @param mixed $expectedresult The expected result after decoding.
@@ -126,7 +126,7 @@ final class jwt_test extends \advanced_testcase {
             $this->expectException($expectedexception[0]);
             $this->expectExceptionMessage($expectedexception[1]);
         }
-        $actualresult = \auth_oidc\jwt::decode($encodedjwt);
+        $actualresult = \auth_voidc\jwt::decode($encodedjwt);
         $this->assertEquals($expectedresult, $actualresult);
     }
 }

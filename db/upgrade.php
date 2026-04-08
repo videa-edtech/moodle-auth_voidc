@@ -17,7 +17,7 @@
 /**
  * Plugin upgrade script.
  *
- * @package auth_oidc
+ * @package auth_voidc
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @author Lai Wei <lai.wei@enovation.ie>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -34,14 +34,14 @@ require_once($CFG->dirroot . '/auth/oidc/lib.php');
  * @param int $oldversion the version we are upgrading from
  * @return bool result
  */
-function xmldb_auth_oidc_upgrade($oldversion) {
+function xmldb_auth_voidc_upgrade($oldversion) {
     global $DB;
 
     $dbman = $DB->get_manager();
 
     if ($oldversion < 2014111703) {
         // Lengthen field.
-        $table = new xmldb_table('auth_oidc_token');
+        $table = new xmldb_table('auth_voidc_token');
         $field = new xmldb_field('scope', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, null, 'username');
         $dbman->change_field_type($table, $field);
 
@@ -49,7 +49,7 @@ function xmldb_auth_oidc_upgrade($oldversion) {
     }
 
     if ($oldversion < 2015012702) {
-        $table = new xmldb_table('auth_oidc_state');
+        $table = new xmldb_table('auth_voidc_state');
         $field = new xmldb_field('additionaldata', XMLDB_TYPE_TEXT, null, null, null, null, null, 'timecreated');
         if (!$dbman->field_exists($table, $field)) {
             $dbman->add_field($table, $field);
@@ -58,7 +58,7 @@ function xmldb_auth_oidc_upgrade($oldversion) {
     }
 
     if ($oldversion < 2015012703) {
-        $table = new xmldb_table('auth_oidc_token');
+        $table = new xmldb_table('auth_voidc_token');
         $field = new xmldb_field('oidcusername', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, null, 'username');
         if (!$dbman->field_exists($table, $field)) {
             $dbman->add_field($table, $field);
@@ -74,7 +74,7 @@ function xmldb_auth_oidc_upgrade($oldversion) {
                        tok.oidcuniqid as oidcuniqid,
                        tok.idtoken as idtoken,
                        tok.oidcusername as oidcusername
-                  FROM {auth_oidc_token} tok
+                  FROM {auth_voidc_token} tok
                   JOIN {user} u ON u.username = tok.username
                  WHERE u.auth = ? AND deleted = ?';
         $params = ['oidc', 0];
@@ -86,7 +86,7 @@ function xmldb_auth_oidc_upgrade($oldversion) {
 
             try {
                 // Decode idtoken and determine oidc username.
-                $idtoken = \auth_oidc\jwt::instance_from_encoded($user->idtoken);
+                $idtoken = \auth_voidc\jwt::instance_from_encoded($user->idtoken);
                 $oidcusername = $idtoken->claim('upn');
                 if (empty($oidcusername)) {
                     $oidcusername = $idtoken->claim('sub');
@@ -97,7 +97,7 @@ function xmldb_auth_oidc_upgrade($oldversion) {
                     $updatedtoken = new stdClass;
                     $updatedtoken->id = $user->tokenid;
                     $updatedtoken->oidcusername = $oidcusername;
-                    $DB->update_record('auth_oidc_token', $updatedtoken);
+                    $DB->update_record('auth_voidc_token', $updatedtoken);
                 }
 
                 // Update user username (if applicable), so user can use rocreds loginflow.
@@ -113,7 +113,7 @@ function xmldb_auth_oidc_upgrade($oldversion) {
                         $updatedtoken = new stdClass;
                         $updatedtoken->id = $user->tokenid;
                         $updatedtoken->username = $oidcusername;
-                        $DB->update_record('auth_oidc_token', $updatedtoken);
+                        $DB->update_record('auth_voidc_token', $updatedtoken);
                     }
                 }
             } catch (moodle_exception $e) {
@@ -124,30 +124,30 @@ function xmldb_auth_oidc_upgrade($oldversion) {
     }
 
     if ($oldversion < 2015012707) {
-        if (!$dbman->table_exists('auth_oidc_prevlogin')) {
-            $dbman->install_one_table_from_xmldb_file(__DIR__.'/install.xml', 'auth_oidc_prevlogin');
+        if (!$dbman->table_exists('auth_voidc_prevlogin')) {
+            $dbman->install_one_table_from_xmldb_file(__DIR__.'/install.xml', 'auth_voidc_prevlogin');
         }
         upgrade_plugin_savepoint(true, 2015012707, 'auth', 'oidc');
     }
 
     if ($oldversion < 2015012710) {
         // Lengthen field.
-        $table = new xmldb_table('auth_oidc_token');
+        $table = new xmldb_table('auth_voidc_token');
         $field = new xmldb_field('scope', XMLDB_TYPE_TEXT, null, null, null, null, null, 'oidcusername');
         $dbman->change_field_type($table, $field);
         upgrade_plugin_savepoint(true, 2015012710, 'auth', 'oidc');
     }
 
     if ($oldversion < 2015111904.01) {
-        // Ensure the username field in auth_oidc_token is lowercase.
-        $authtokensrs = $DB->get_recordset('auth_oidc_token');
+        // Ensure the username field in auth_voidc_token is lowercase.
+        $authtokensrs = $DB->get_recordset('auth_voidc_token');
         foreach ($authtokensrs as $authtokenrec) {
             $newusername = trim(\core_text::strtolower($authtokenrec->username));
             if ($newusername !== $authtokenrec->username) {
                 $updatedrec = new stdClass;
                 $updatedrec->id = $authtokenrec->id;
                 $updatedrec->username = $newusername;
-                $DB->update_record('auth_oidc_token', $updatedrec);
+                $DB->update_record('auth_voidc_token', $updatedrec);
             }
         }
         upgrade_plugin_savepoint(true, 2015111904.01, 'auth', 'oidc');
@@ -155,55 +155,55 @@ function xmldb_auth_oidc_upgrade($oldversion) {
 
     if ($oldversion < 2015111905.01) {
         // Update old endpoints.
-        $config = get_config('auth_oidc');
+        $config = get_config('auth_voidc');
         if ($config->authendpoint === 'https://login.windows.net/common/oauth2/authorize') {
             add_to_config_log('authendpoint', $config->authendpoint, 'https://login.microsoftonline.com/common/oauth2/authorize',
-                'auth_oidc');
-            set_config('authendpoint', 'https://login.microsoftonline.com/common/oauth2/authorize', 'auth_oidc');
+                'auth_voidc');
+            set_config('authendpoint', 'https://login.microsoftonline.com/common/oauth2/authorize', 'auth_voidc');
         }
 
         if ($config->tokenendpoint === 'https://login.windows.net/common/oauth2/token') {
             add_to_config_log('tokenendpoint', $config->tokenendpoint, 'https://login.microsoftonline.com/common/oauth2/token',
-                'auth_oidc');
-            set_config('tokenendpoint', 'https://login.microsoftonline.com/common/oauth2/token', 'auth_oidc');
+                'auth_voidc');
+            set_config('tokenendpoint', 'https://login.microsoftonline.com/common/oauth2/token', 'auth_voidc');
         }
 
         upgrade_plugin_savepoint(true, 2015111905.01, 'auth', 'oidc');
     }
 
     if ($oldversion < 2018051700.01) {
-        $table = new xmldb_table('auth_oidc_token');
+        $table = new xmldb_table('auth_voidc_token');
         $field = new xmldb_field('userid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0', 'username');
         if (!$dbman->field_exists($table, $field)) {
             $dbman->add_field($table, $field);
             $sql = 'SELECT tok.id, tok.username, u.username, u.id as userid
-                      FROM {auth_oidc_token} tok
+                      FROM {auth_voidc_token} tok
                       JOIN {user} u ON u.username = tok.username';
             $records = $DB->get_recordset_sql($sql);
             foreach ($records as $record) {
                 $newrec = new stdClass;
                 $newrec->id = $record->id;
                 $newrec->userid = $record->userid;
-                $DB->update_record('auth_oidc_token', $newrec);
+                $DB->update_record('auth_voidc_token', $newrec);
             }
         }
         upgrade_plugin_savepoint(true, 2018051700.01, 'auth', 'oidc');
     }
 
     if ($oldversion < 2020020301) {
-        $oldgraphtokens = $DB->get_records('auth_oidc_token', ['resource' => 'https://graph.windows.net']);
+        $oldgraphtokens = $DB->get_records('auth_voidc_token', ['resource' => 'https://graph.windows.net']);
         foreach ($oldgraphtokens as $graphtoken) {
             $graphtoken->resource = 'https://graph.microsoft.com';
-            $DB->update_record('auth_oidc_token', $graphtoken);
+            $DB->update_record('auth_voidc_token', $graphtoken);
         }
 
-        $oidcresource = get_config('auth_oidc', 'oidcresource');
+        $oidcresource = get_config('auth_voidc', 'oidcresource');
         if ($oidcresource !== false && strpos($oidcresource, 'windows') !== false) {
-            $existingoidcresource = get_config('auth_oidc', 'oidcresource');
+            $existingoidcresource = get_config('auth_voidc', 'oidcresource');
             if ($existingoidcresource != 'https://graph.windows.net') {
-                add_to_config_log('oidcresource', $existingoidcresource, 'https://graph.microsoft.com', 'auth_oidc');
+                add_to_config_log('oidcresource', $existingoidcresource, 'https://graph.microsoft.com', 'auth_voidc');
             }
-            set_config('oidcresource', 'https://graph.microsoft.com', 'auth_oidc');
+            set_config('oidcresource', 'https://graph.microsoft.com', 'auth_voidc');
         }
 
         upgrade_plugin_savepoint(true, 2020020301, 'auth', 'oidc');
@@ -212,11 +212,11 @@ function xmldb_auth_oidc_upgrade($oldversion) {
     if ($oldversion < 2020071503) {
         $localo365singlesignoffsetting = get_config('local_o365', 'single_sign_off');
         if ($localo365singlesignoffsetting !== false) {
-            $existingsignlesignoffsetting = get_config('auth_oidc', 'single_sign_off');
+            $existingsignlesignoffsetting = get_config('auth_voidc', 'single_sign_off');
             if ($existingsignlesignoffsetting !== true) {
-                add_to_config_log('single_sign_off', $existingsignlesignoffsetting, true, 'auth_oidc');
+                add_to_config_log('single_sign_off', $existingsignlesignoffsetting, true, 'auth_voidc');
             }
-            set_config('single_sign_off', true, 'auth_oidc');
+            set_config('single_sign_off', true, 'auth_voidc');
             unset_config('single_sign_off', 'local_o365');
         }
 
@@ -224,9 +224,9 @@ function xmldb_auth_oidc_upgrade($oldversion) {
     }
 
     if ($oldversion < 2020110901) {
-        if ($dbman->field_exists('auth_oidc_token', 'resource')) {
-            // Rename field resource on table auth_oidc_token to tokenresource.
-            $table = new xmldb_table('auth_oidc_token');
+        if ($dbman->field_exists('auth_voidc_token', 'resource')) {
+            // Rename field resource on table auth_voidc_token to tokenresource.
+            $table = new xmldb_table('auth_voidc_token');
 
             $field = new xmldb_field('resource', XMLDB_TYPE_CHAR, '127', null, XMLDB_NOTNULL, null, null, 'scope');
 
@@ -239,10 +239,10 @@ function xmldb_auth_oidc_upgrade($oldversion) {
     }
 
     if ($oldversion < 2020110903) {
-        // Part 1: add index to auth_oidc_token table.
-        $table = new xmldb_table('auth_oidc_token');
+        // Part 1: add index to auth_voidc_token table.
+        $table = new xmldb_table('auth_voidc_token');
 
-        // Define index userid (not unique) to be added to auth_oidc_token.
+        // Define index userid (not unique) to be added to auth_voidc_token.
         $useridindex = new xmldb_index('userid', XMLDB_INDEX_NOTUNIQUE, ['userid']);
 
         // Conditionally launch add index userid.
@@ -250,7 +250,7 @@ function xmldb_auth_oidc_upgrade($oldversion) {
             $dbman->add_index($table, $useridindex);
         }
 
-        // Define index username (not unique) to be added to auth_oidc_token.
+        // Define index username (not unique) to be added to auth_voidc_token.
         $usernameindex = new xmldb_index('username', XMLDB_INDEX_NOTUNIQUE, ['username']);
 
         // Conditionally launch add index username.
@@ -262,24 +262,24 @@ function xmldb_auth_oidc_upgrade($oldversion) {
         $entratenant = get_config('local_o365', 'aadtenant');
 
         if ($entratenant) {
-            $authorizationendpoint = get_config('auth_oidc', 'authendpoint');
+            $authorizationendpoint = get_config('auth_voidc', 'authendpoint');
             if ($authorizationendpoint == 'https://login.microsoftonline.com/common/oauth2/authorize') {
                 $authorizationendpoint = str_replace('common', $entratenant, $authorizationendpoint);
-                $existingauthorizationendpoint = get_config('auth_oidc', 'authendpoint');
+                $existingauthorizationendpoint = get_config('auth_voidc', 'authendpoint');
                 if ($existingauthorizationendpoint != $authorizationendpoint) {
-                    add_to_config_log('authendpoint', $existingauthorizationendpoint, $authorizationendpoint, 'auth_oidc');
+                    add_to_config_log('authendpoint', $existingauthorizationendpoint, $authorizationendpoint, 'auth_voidc');
                 }
-                set_config('authendpoint', $authorizationendpoint, 'auth_oidc');
+                set_config('authendpoint', $authorizationendpoint, 'auth_voidc');
             }
 
-            $tokenendpoint = get_config('auth_oidc', 'tokenendpoint');
+            $tokenendpoint = get_config('auth_voidc', 'tokenendpoint');
             if ($tokenendpoint == 'https://login.microsoftonline.com/common/oauth2/token') {
                 $tokenendpoint = str_replace('common', $entratenant, $tokenendpoint);
-                $existingtokenendpoint = get_config('auth_oidc', 'tokenendpoint');
+                $existingtokenendpoint = get_config('auth_voidc', 'tokenendpoint');
                 if ($existingtokenendpoint != $tokenendpoint) {
-                    add_to_config_log('tokenendpoint', $existingtokenendpoint, $tokenendpoint, 'auth_oidc');
+                    add_to_config_log('tokenendpoint', $existingtokenendpoint, $tokenendpoint, 'auth_voidc');
                 }
-                set_config('tokenendpoint', $tokenendpoint, 'auth_oidc');
+                set_config('tokenendpoint', $tokenendpoint, 'auth_voidc');
             }
         }
 
@@ -291,7 +291,7 @@ function xmldb_auth_oidc_upgrade($oldversion) {
         // Migrate field mapping settings from local_o365.
         $existingfieldmappingsettings = get_config('local_o365', 'fieldmap');
         if ($existingfieldmappingsettings !== false) {
-            $userfields = auth_oidc_get_all_user_fields();
+            $userfields = auth_voidc_get_all_user_fields();
 
             $existingfieldmappingsettings = @unserialize($existingfieldmappingsettings);
             if (is_array($existingfieldmappingsettings)) {
@@ -309,23 +309,23 @@ function xmldb_auth_oidc_upgrade($oldversion) {
                         $remotefield = 'faxNumber';
                     }
 
-                    $existingmapsetting = get_config('auth_oidc', 'field_map_' . $localfield);
+                    $existingmapsetting = get_config('auth_voidc', 'field_map_' . $localfield);
                     if ($existingmapsetting !== $remotefield) {
-                        add_to_config_log('field_map_' . $localfield, $existingmapsetting, $remotefield, 'auth_oidc');
+                        add_to_config_log('field_map_' . $localfield, $existingmapsetting, $remotefield, 'auth_voidc');
                     }
-                    set_config('field_map_' . $localfield, $remotefield, 'auth_oidc');
+                    set_config('field_map_' . $localfield, $remotefield, 'auth_voidc');
 
-                    $existinglocksetting = get_config('auth_oidc', 'field_lock_' . $localfield);
+                    $existinglocksetting = get_config('auth_voidc', 'field_lock_' . $localfield);
                     if ($existinglocksetting !== 'unlocked') {
-                        add_to_config_log('field_lock_' . $localfield, $existinglocksetting, 'unlocked', 'auth_oidc');
+                        add_to_config_log('field_lock_' . $localfield, $existinglocksetting, 'unlocked', 'auth_voidc');
                     }
-                    set_config('field_lock_' . $localfield, 'unlocked', 'auth_oidc');
+                    set_config('field_lock_' . $localfield, 'unlocked', 'auth_voidc');
 
-                    $existingupdatelocalsetting = get_config('auth_oidc', 'field_updatelocal_' . $localfield);
+                    $existingupdatelocalsetting = get_config('auth_voidc', 'field_updatelocal_' . $localfield);
                     if ($existingupdatelocalsetting !== $behaviour) {
-                        add_to_config_log('field_updatelocal_' . $localfield, $existingupdatelocalsetting, $behaviour, 'auth_oidc');
+                        add_to_config_log('field_updatelocal_' . $localfield, $existingupdatelocalsetting, $behaviour, 'auth_voidc');
                     }
-                    set_config('field_updatelocal_' . $localfield, $behaviour, 'auth_oidc');
+                    set_config('field_updatelocal_' . $localfield, $behaviour, 'auth_voidc');
 
                     if (($key = array_search($localfield, $userfields)) !== false) {
                         unset($userfields[$key]);
@@ -333,23 +333,23 @@ function xmldb_auth_oidc_upgrade($oldversion) {
                 }
 
                 foreach ($userfields as $userfield) {
-                    $existingmapsetting = get_config('auth_oidc', 'field_map_' . $userfield);
+                    $existingmapsetting = get_config('auth_voidc', 'field_map_' . $userfield);
                     if ($existingmapsetting !== '') {
-                        add_to_config_log('field_map_' . $userfield, $existingmapsetting, '', 'auth_oidc');
+                        add_to_config_log('field_map_' . $userfield, $existingmapsetting, '', 'auth_voidc');
                     }
-                    set_config('field_map_' . $userfield, '', 'auth_oidc');
+                    set_config('field_map_' . $userfield, '', 'auth_voidc');
 
-                    $existinglocksetting = get_config('auth_oidc', 'field_lock_' . $userfield);
+                    $existinglocksetting = get_config('auth_voidc', 'field_lock_' . $userfield);
                     if ($existinglocksetting !== 'unlocked') {
-                        add_to_config_log('field_lock_' . $userfield, $existinglocksetting, 'unlocked', 'auth_oidc');
+                        add_to_config_log('field_lock_' . $userfield, $existinglocksetting, 'unlocked', 'auth_voidc');
                     }
-                    set_config('field_lock_' . $userfield, 'unlocked', 'auth_oidc');
+                    set_config('field_lock_' . $userfield, 'unlocked', 'auth_voidc');
 
-                    $existingupdatelocalsetting = get_config('auth_oidc', 'field_updatelocal_' . $userfield);
+                    $existingupdatelocalsetting = get_config('auth_voidc', 'field_updatelocal_' . $userfield);
                     if ($existingupdatelocalsetting !== 'always') {
-                        add_to_config_log('field_updatelocal_' . $userfield, $existingupdatelocalsetting, 'always', 'auth_oidc');
+                        add_to_config_log('field_updatelocal_' . $userfield, $existingupdatelocalsetting, 'always', 'auth_voidc');
                     }
-                    set_config('field_updatelocal_' . $userfield, 'always', 'auth_oidc');
+                    set_config('field_updatelocal_' . $userfield, 'always', 'auth_voidc');
                 }
             }
 
@@ -361,8 +361,8 @@ function xmldb_auth_oidc_upgrade($oldversion) {
     }
 
     if ($oldversion < 2022041901) {
-        // Define field sid to be added to auth_oidc_token.
-        $table = new xmldb_table('auth_oidc_token');
+        // Define field sid to be added to auth_voidc_token.
+        $table = new xmldb_table('auth_voidc_token');
         $field = new xmldb_field('sid', XMLDB_TYPE_CHAR, '36', null, null, null, null, 'idtoken');
 
         // Conditionally launch add field sid.
@@ -376,79 +376,79 @@ function xmldb_auth_oidc_upgrade($oldversion) {
 
     if ($oldversion < 2022041906) {
         // Update idptype config.
-        $idptypeconfig = get_config('auth_oidc', 'idptype');
-        $authorizationendpoint = get_config('auth_oidc', 'authendpoint');
+        $idptypeconfig = get_config('auth_voidc', 'idptype');
+        $authorizationendpoint = get_config('auth_voidc', 'authendpoint');
         if (empty($idptypeconfig)) {
             if (!$authorizationendpoint) {
-                $existingidptype = get_config('auth_oidc', 'idptype');
-                if ($existingidptype != AUTH_OIDC_IDP_TYPE_MICROSOFT_ENTRA_ID) {
-                    add_to_config_log('idptype', $existingidptype, AUTH_OIDC_IDP_TYPE_MICROSOFT_ENTRA_ID, 'auth_oidc');
+                $existingidptype = get_config('auth_voidc', 'idptype');
+                if ($existingidptype != AUTH_VOIDC_IDP_TYPE_MICROSOFT_ENTRA_ID) {
+                    add_to_config_log('idptype', $existingidptype, AUTH_VOIDC_IDP_TYPE_MICROSOFT_ENTRA_ID, 'auth_voidc');
                 }
-                set_config('idptype', AUTH_OIDC_IDP_TYPE_MICROSOFT_ENTRA_ID, 'auth_oidc');
+                set_config('idptype', AUTH_VOIDC_IDP_TYPE_MICROSOFT_ENTRA_ID, 'auth_voidc');
             } else {
-                $endpointversion = auth_oidc_determine_endpoint_version($authorizationendpoint);
+                $endpointversion = auth_voidc_determine_endpoint_version($authorizationendpoint);
                 switch ($endpointversion) {
-                    case AUTH_OIDC_MICROSOFT_ENDPOINT_VERSION_1:
-                        $existingidptype = get_config('auth_oidc', 'idptype');
-                        if ($existinglocksetting != AUTH_OIDC_IDP_TYPE_MICROSOFT_ENTRA_ID) {
-                            add_to_config_log('idptype', $existingidptype, AUTH_OIDC_IDP_TYPE_MICROSOFT_ENTRA_ID, 'auth_oidc');
+                    case AUTH_VOIDC_MICROSOFT_ENDPOINT_VERSION_1:
+                        $existingidptype = get_config('auth_voidc', 'idptype');
+                        if ($existinglocksetting != AUTH_VOIDC_IDP_TYPE_MICROSOFT_ENTRA_ID) {
+                            add_to_config_log('idptype', $existingidptype, AUTH_VOIDC_IDP_TYPE_MICROSOFT_ENTRA_ID, 'auth_voidc');
                         }
-                        set_config('idptype', AUTH_OIDC_IDP_TYPE_MICROSOFT_ENTRA_ID, 'auth_oidc');
+                        set_config('idptype', AUTH_VOIDC_IDP_TYPE_MICROSOFT_ENTRA_ID, 'auth_voidc');
                         break;
-                    case AUTH_OIDC_MICROSOFT_ENDPOINT_VERSION_2:
-                        $existingidptype = get_config('auth_oidc', 'idptype');
-                        if ($existinglocksetting != AUTH_OIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM) {
+                    case AUTH_VOIDC_MICROSOFT_ENDPOINT_VERSION_2:
+                        $existingidptype = get_config('auth_voidc', 'idptype');
+                        if ($existinglocksetting != AUTH_VOIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM) {
                             add_to_config_log(
                                     'idptype',
                                     $existingidptype,
-                                    AUTH_OIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM,
-                                    'auth_oidc'
+                                    AUTH_VOIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM,
+                                    'auth_voidc'
                             );
                         }
-                        set_config('idptype', AUTH_OIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM, 'auth_oidc');
+                        set_config('idptype', AUTH_VOIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM, 'auth_voidc');
                         break;
                     default:
-                        $existingidptype = get_config('auth_oidc', 'idptype');
-                        if ($existinglocksetting != AUTH_OIDC_IDP_TYPE_OTHER) {
-                            add_to_config_log('idptype', $existingidptype, AUTH_OIDC_IDP_TYPE_OTHER, 'auth_oidc');
+                        $existingidptype = get_config('auth_voidc', 'idptype');
+                        if ($existinglocksetting != AUTH_VOIDC_IDP_TYPE_OTHER) {
+                            add_to_config_log('idptype', $existingidptype, AUTH_VOIDC_IDP_TYPE_OTHER, 'auth_voidc');
                         }
-                        set_config('idptype', AUTH_OIDC_IDP_TYPE_OTHER, 'auth_oidc');
+                        set_config('idptype', AUTH_VOIDC_IDP_TYPE_OTHER, 'auth_voidc');
                 }
             }
         }
 
         // Update client authentication type configuration settings.
-        $clientauthmethodconfig = get_config('auth_oidc', 'clientauthmethod');
+        $clientauthmethodconfig = get_config('auth_voidc', 'clientauthmethod');
         if (empty($clientauthmethodconfig)) {
-            $clientsecretconfig = get_config('auth_oidc', 'clientsecret');
-            $clientcertificateconfig = get_config('auth_oidc', 'clientcert');
-            $clientprivatekeyconfig = get_config('auth_oidc', 'clientprivatekey');
+            $clientsecretconfig = get_config('auth_voidc', 'clientsecret');
+            $clientcertificateconfig = get_config('auth_voidc', 'clientcert');
+            $clientprivatekeyconfig = get_config('auth_voidc', 'clientprivatekey');
             if (empty($clientsecretconfig) && !empty($clientcertificateconfig) && !empty($clientprivatekeyconfig)) {
-                $existingclientauthmethod = get_config('auth_oidc', 'clientauthmethod');
-                if ($existingclientauthmethod != AUTH_OIDC_AUTH_METHOD_CERTIFICATE) {
-                    add_to_config_log('clientauthmethod', $existingclientauthmethod, AUTH_OIDC_AUTH_METHOD_CERTIFICATE,
-                        'auth_oidc');
+                $existingclientauthmethod = get_config('auth_voidc', 'clientauthmethod');
+                if ($existingclientauthmethod != AUTH_VOIDC_AUTH_METHOD_CERTIFICATE) {
+                    add_to_config_log('clientauthmethod', $existingclientauthmethod, AUTH_VOIDC_AUTH_METHOD_CERTIFICATE,
+                        'auth_voidc');
                 }
-                set_config('clientauthmethod', AUTH_OIDC_AUTH_METHOD_CERTIFICATE, 'auth_oidc');
+                set_config('clientauthmethod', AUTH_VOIDC_AUTH_METHOD_CERTIFICATE, 'auth_voidc');
             } else {
-                $existingclientauthmethod = get_config('auth_oidc', 'clientauthmethod');
-                if ($existingclientauthmethod != AUTH_OIDC_AUTH_METHOD_SECRET) {
-                    add_to_config_log('clientauthmethod', $existingclientauthmethod, AUTH_OIDC_AUTH_METHOD_SECRET, 'auth_oidc');
+                $existingclientauthmethod = get_config('auth_voidc', 'clientauthmethod');
+                if ($existingclientauthmethod != AUTH_VOIDC_AUTH_METHOD_SECRET) {
+                    add_to_config_log('clientauthmethod', $existingclientauthmethod, AUTH_VOIDC_AUTH_METHOD_SECRET, 'auth_voidc');
                 }
-                set_config('clientauthmethod', AUTH_OIDC_AUTH_METHOD_SECRET, 'auth_oidc');
+                set_config('clientauthmethod', AUTH_VOIDC_AUTH_METHOD_SECRET, 'auth_voidc');
             }
         }
 
         // Update tenantnameorguid config.
-        $tenantnameorguidconfig = get_config('auth_oidc', 'tenantnameorguid');
+        $tenantnameorguidconfig = get_config('auth_voidc', 'tenantnameorguid');
         if (empty($tenantnameorguidconfig)) {
             $entratenant = get_config('local_o365', 'aadtenant');
             if ($entratenant) {
-                $existingtenantnameorguid = get_config('auth_oidc', 'tenantnameorguid');
+                $existingtenantnameorguid = get_config('auth_voidc', 'tenantnameorguid');
                 if ($existingtenantnameorguid != $entratenant) {
-                    add_to_config_log('tenantnameorguid', $existingtenantnameorguid, $entratenant, 'auth_oidc');
+                    add_to_config_log('tenantnameorguid', $existingtenantnameorguid, $entratenant, 'auth_voidc');
                 }
-                set_config('tenantnameorguid', $entratenant, 'auth_oidc');
+                set_config('tenantnameorguid', $entratenant, 'auth_voidc');
             }
         }
 
@@ -458,7 +458,7 @@ function xmldb_auth_oidc_upgrade($oldversion) {
 
     if ($oldversion < 2022112801) {
         // Update tenantnameorguid config.
-        unset_config('auth_oidc', 'tenantnameorguid');
+        unset_config('auth_voidc', 'tenantnameorguid');
 
         // Oidc savepoint reached.
         upgrade_plugin_savepoint(true, 2022112801, 'auth', 'oidc');
@@ -466,12 +466,12 @@ function xmldb_auth_oidc_upgrade($oldversion) {
 
     if ($oldversion < 2023100902) {
         // Set initial value for "clientcertsource" config.
-        if (empty(get_config('auth_oidc', 'clientcertsource'))) {
-            $existingclientcertsource = get_config('auth_oidc', 'clientcertsource');
-            if ($existingclientcertsource != AUTH_OIDC_AUTH_CERT_SOURCE_TEXT) {
-                add_to_config_log('clientcertsource', $existingclientcertsource, AUTH_OIDC_AUTH_CERT_SOURCE_TEXT, 'auth_oidc');
+        if (empty(get_config('auth_voidc', 'clientcertsource'))) {
+            $existingclientcertsource = get_config('auth_voidc', 'clientcertsource');
+            if ($existingclientcertsource != AUTH_VOIDC_AUTH_CERT_SOURCE_TEXT) {
+                add_to_config_log('clientcertsource', $existingclientcertsource, AUTH_VOIDC_AUTH_CERT_SOURCE_TEXT, 'auth_voidc');
             }
-            set_config('clientcertsource', AUTH_OIDC_AUTH_CERT_SOURCE_TEXT, 'auth_oidc');
+            set_config('clientcertsource', AUTH_VOIDC_AUTH_CERT_SOURCE_TEXT, 'auth_voidc');
         }
 
         upgrade_plugin_savepoint(true, 2023100902, 'auth', 'oidc');
@@ -479,16 +479,16 @@ function xmldb_auth_oidc_upgrade($oldversion) {
 
     if ($oldversion < 2024042201) {
         // Set default values for new settings "bindingusernameclaim" and "customclaimname".
-        if (!get_config('auth_oidc', 'bindingusernameclaim')) {
-            set_config('bindingusernameclaim', 'auto', 'auth_oidc');
+        if (!get_config('auth_voidc', 'bindingusernameclaim')) {
+            set_config('bindingusernameclaim', 'auto', 'auth_voidc');
         }
 
-        if (!get_config('auth_oidc', 'customclaimname')) {
-            set_config('customclaimname', '', 'auth_oidc');
+        if (!get_config('auth_voidc', 'customclaimname')) {
+            set_config('customclaimname', '', 'auth_voidc');
         }
 
-        // Define field useridentifier to be added to auth_oidc_token.
-        $table = new xmldb_table('auth_oidc_token');
+        // Define field useridentifier to be added to auth_voidc_token.
+        $table = new xmldb_table('auth_voidc_token');
         $field = new xmldb_field('useridentifier', XMLDB_TYPE_CHAR, '255', null, null, null, null, 'oidcusername');
 
         // Conditionally launch add field useridentifier.
@@ -496,7 +496,7 @@ function xmldb_auth_oidc_upgrade($oldversion) {
             $dbman->add_field($table, $field);
 
             // Save current value of oidcusername to useridentifier.
-            $sql = 'UPDATE {auth_oidc_token} SET useridentifier = oidcusername';
+            $sql = 'UPDATE {auth_voidc_token} SET useridentifier = oidcusername';
             $DB->execute($sql);
         }
 
@@ -506,9 +506,9 @@ function xmldb_auth_oidc_upgrade($oldversion) {
 
     if ($oldversion < 2024100701) {
         // Set the default value for the bindingusernameclaim setting.
-        $bindingusernameclaimconfig = get_config('auth_oidc', 'bindingusernameclaim');
+        $bindingusernameclaimconfig = get_config('auth_voidc', 'bindingusernameclaim');
         if (empty($bindingusernameclaimconfig)) {
-            set_config('bindingusernameclaim', 'auto', 'auth_oidc');
+            set_config('bindingusernameclaim', 'auto', 'auth_voidc');
         }
 
         // Oidc savepoint reached.
@@ -516,34 +516,34 @@ function xmldb_auth_oidc_upgrade($oldversion) {
     }
 
     if ($oldversion < 2024100702) {
-        // Define table auth_oidc_sid to be created.
-        $table = new xmldb_table('auth_oidc_sid');
+        // Define table auth_voidc_sid to be created.
+        $table = new xmldb_table('auth_voidc_sid');
 
-        // Adding fields to table auth_oidc_sid.
+        // Adding fields to table auth_voidc_sid.
         $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
         $table->add_field('userid', XMLDB_TYPE_INTEGER, '20', null, XMLDB_NOTNULL, null, null);
         $table->add_field('sid', XMLDB_TYPE_CHAR, '36', null, XMLDB_NOTNULL, null, null);
         $table->add_field('timecreated', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
 
-        // Adding keys to table auth_oidc_sid.
+        // Adding keys to table auth_voidc_sid.
         $table->add_key('primary', XMLDB_KEY_PRIMARY, ['id']);
 
-        // Conditionally launch create table for auth_oidc_sid.
+        // Conditionally launch create table for auth_voidc_sid.
         if (!$dbman->table_exists($table)) {
             $dbman->create_table($table);
         }
 
-        // Migrate existing sid values from auth_oidc_tokens to auth_oidc_sid.
-        if ($dbman->field_exists('auth_oidc_token', 'sid')) {
-            $sql = "INSERT INTO {auth_oidc_sid} (userid, sid, timecreated)
+        // Migrate existing sid values from auth_voidc_tokens to auth_voidc_sid.
+        if ($dbman->field_exists('auth_voidc_token', 'sid')) {
+            $sql = "INSERT INTO {auth_voidc_sid} (userid, sid, timecreated)
                     SELECT userid, sid, ? AS timecreated
-                    FROM {auth_oidc_token}
+                    FROM {auth_voidc_token}
                     WHERE sid IS NOT NULL AND sid != ''";
             $DB->execute($sql, [time()]);
         }
 
-        // Define field sid to be dropped from auth_oidc_token.
-        $table = new xmldb_table('auth_oidc_token');
+        // Define field sid to be dropped from auth_voidc_token.
+        $table = new xmldb_table('auth_voidc_token');
         $field = new xmldb_field('sid');
 
         // Conditionally launch drop field sid.

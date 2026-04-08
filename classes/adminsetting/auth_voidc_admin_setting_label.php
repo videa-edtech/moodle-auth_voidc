@@ -17,20 +17,20 @@
 /**
  * Definition of a label admin setting control.
  *
- * @package auth_oidc
+ * @package auth_voidc
  * @author Lai Wei <lai.wei@enovation.ie>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @copyright (C) 2021 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
-namespace auth_oidc\adminsetting;
+namespace auth_voidc\adminsetting;
 
 use admin_setting;
 
 /**
  * Display a static text.
  */
-class auth_oidc_admin_setting_label extends admin_setting {
+class auth_voidc_admin_setting_label extends admin_setting {
     /**
      * @var string $label The label for display purposes.
      */

@@ -17,7 +17,7 @@
 /**
  * User control panel page.
  *
- * @package auth_oidc
+ * @package auth_voidc
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
@@ -31,31 +31,31 @@ require_login();
 
 $action = optional_param('action', null, PARAM_TEXT);
 
-$oidctoken = $DB->get_record('auth_oidc_token', ['userid' => $USER->id]);
+$oidctoken = $DB->get_record('auth_voidc_token', ['userid' => $USER->id]);
 $oidcconnected = (!empty($oidctoken)) ? true : false;
 
 $oidcloginconnected = ($USER->auth === 'oidc') ? true : false;
 
 if (!is_enabled_auth('oidc')) {
-    throw new moodle_exception('erroroidcnotenabled', 'auth_oidc');
+    throw new moodle_exception('erroroidcnotenabled', 'auth_voidc');
 }
 
 if (!empty($action)) {
     if ($action === 'connectlogin' && $oidcloginconnected === false) {
         // Use authorization request login flow to connect existing users.
-        auth_oidc_connectioncapability($USER->id, 'connect', true);
-        $auth = new \auth_oidc\loginflow\authcode;
-        $auth->set_httpclient(new \auth_oidc\httpclient());
+        auth_voidc_connectioncapability($USER->id, 'connect', true);
+        $auth = new \auth_voidc\loginflow\authcode;
+        $auth->set_httpclient(new \auth_voidc\httpclient());
         $auth->initiateauthrequest();
     } else if ($action === 'disconnectlogin' && $oidcloginconnected === true) {
         if (is_enabled_auth('manual') === true) {
-            auth_oidc_connectioncapability($USER->id, 'disconnect', true);
+            auth_voidc_connectioncapability($USER->id, 'disconnect', true);
             $auth = new \auth_plugin_oidc;
-            $auth->set_httpclient(new \auth_oidc\httpclient());
+            $auth->set_httpclient(new \auth_voidc\httpclient());
             $auth->disconnect();
         }
     } else {
-        throw new moodle_exception('errorucpinvalidaction', 'auth_oidc');
+        throw new moodle_exception('errorucpinvalidaction', 'auth_voidc');
     }
 } else {
     $PAGE->set_url('/auth/oidc/ucp.php');
@@ -63,45 +63,45 @@ if (!empty($action)) {
     $PAGE->set_context(\context_system::instance());
     $PAGE->set_pagelayout('standard');
     $USER->editing = false;
-    $authconfig = get_config('auth_oidc');
-    $opname = (!empty($authconfig->opname)) ? $authconfig->opname : get_string('pluginname', 'auth_oidc');
+    $authconfig = get_config('auth_voidc');
+    $opname = (!empty($authconfig->opname)) ? $authconfig->opname : get_string('pluginname', 'auth_voidc');
 
-    $ucptitle = get_string('ucp_title', 'auth_oidc', $opname);
+    $ucptitle = get_string('ucp_title', 'auth_voidc', $opname);
     $PAGE->navbar->add($ucptitle, $PAGE->url);
     $PAGE->set_title($ucptitle);
 
     echo $OUTPUT->header();
     echo \html_writer::tag('h2', $ucptitle);
-    echo get_string('ucp_general_intro', 'auth_oidc', $opname);
+    echo get_string('ucp_general_intro', 'auth_voidc', $opname);
     echo '<br /><br />';
 
     if (optional_param('o365accountconnected', null, PARAM_TEXT) == 'true') {
         echo \html_writer::start_div('connectionstatus alert alert-error');
-        echo \html_writer::tag('h5', get_string('ucp_o365accountconnected', 'auth_oidc'));
+        echo \html_writer::tag('h5', get_string('ucp_o365accountconnected', 'auth_voidc'));
         echo \html_writer::end_div();
     }
 
     // Login status.
-    echo \html_writer::start_div('auth_oidc_ucp_indicator');
-    echo \html_writer::tag('h4', get_string('ucp_login_status', 'auth_oidc', $opname));
+    echo \html_writer::start_div('auth_voidc_ucp_indicator');
+    echo \html_writer::tag('h4', get_string('ucp_login_status', 'auth_voidc', $opname));
     if ($oidcloginconnected === true) {
-        echo \html_writer::tag('h4', get_string('ucp_status_enabled', 'auth_oidc'), ['class' => 'notifysuccess']);
+        echo \html_writer::tag('h4', get_string('ucp_status_enabled', 'auth_voidc'), ['class' => 'notifysuccess']);
         if (is_enabled_auth('manual') === true) {
-            if (auth_oidc_connectioncapability($USER->id, 'disconnect')) {
+            if (auth_voidc_connectioncapability($USER->id, 'disconnect')) {
                 $connectlinkuri = new \moodle_url('/auth/oidc/ucp.php', ['action' => 'disconnectlogin']);
-                $strdisconnect = get_string('ucp_login_stop', 'auth_oidc', $opname);
+                $strdisconnect = get_string('ucp_login_stop', 'auth_voidc', $opname);
                 $linkhtml = \html_writer::link($connectlinkuri, $strdisconnect);
                 echo \html_writer::tag('h5', $linkhtml);
-                echo \html_writer::span(get_string('ucp_login_stop_desc', 'auth_oidc', $opname));
+                echo \html_writer::span(get_string('ucp_login_stop_desc', 'auth_voidc', $opname));
             }
         }
     } else {
-        echo \html_writer::tag('h4', get_string('ucp_status_disabled', 'auth_oidc'), ['class' => 'notifyproblem']);
-        if (auth_oidc_connectioncapability($USER->id, 'connect')) {
+        echo \html_writer::tag('h4', get_string('ucp_status_disabled', 'auth_voidc'), ['class' => 'notifyproblem']);
+        if (auth_voidc_connectioncapability($USER->id, 'connect')) {
             $connectlinkuri = new \moodle_url('/auth/oidc/ucp.php', ['action' => 'connectlogin']);
-            $linkhtml = \html_writer::link($connectlinkuri, get_string('ucp_login_start', 'auth_oidc', $opname));
+            $linkhtml = \html_writer::link($connectlinkuri, get_string('ucp_login_start', 'auth_voidc', $opname));
             echo \html_writer::tag('h5', $linkhtml);
-            echo \html_writer::span(get_string('ucp_login_start_desc', 'auth_oidc', $opname));
+            echo \html_writer::span(get_string('ucp_login_start_desc', 'auth_voidc', $opname));
         }
     }
     echo \html_writer::end_div();

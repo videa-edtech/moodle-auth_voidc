@@ -17,7 +17,7 @@
 /**
  * Single Sign Out end point.
  *
- * @package auth_oidc
+ * @package auth_voidc
  * @author Lai Wei <lai.wei@enovation.ie>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
@@ -32,7 +32,7 @@ $PAGE->set_context(context_system::instance());
 $sid = optional_param('sid', '', PARAM_TEXT);
 
 if ($sid) {
-    if ($authoidcsidrecord = $DB->get_record('auth_oidc_sid', ['sid' => $sid])) {
+    if ($authoidcsidrecord = $DB->get_record('auth_voidc_sid', ['sid' => $sid])) {
         if ($authoidcsidrecord->userid == $USER->id) {
             $authsequence = get_enabled_auth_plugins(); // Auths, in sequence.
             foreach ($authsequence as $authname) {
@@ -40,7 +40,7 @@ if ($sid) {
                 $authplugin->logoutpage_hook();
             }
 
-            $DB->delete_records('auth_oidc_sid', ['sid' => $sid]);
+            $DB->delete_records('auth_voidc_sid', ['sid' => $sid]);
             require_logout();
         }
     }

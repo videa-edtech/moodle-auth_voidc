@@ -17,13 +17,13 @@
 /**
  * OIDC disconnect form.
  *
- * @package auth_oidc
+ * @package auth_voidc
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
-namespace auth_oidc\form;
+namespace auth_voidc\form;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -45,12 +45,12 @@ class disconnect extends \moodleform {
             $userrec = $DB->get_record('user', ['id' => $USER->id]);
         }
 
-        $authconfig = get_config('auth_oidc');
-        $opname = (!empty($authconfig->opname)) ? $authconfig->opname : get_string('pluginname', 'auth_oidc');
+        $authconfig = get_config('auth_voidc');
+        $opname = (!empty($authconfig->opname)) ? $authconfig->opname : get_string('pluginname', 'auth_voidc');
 
         $mform =& $this->_form;
-        $mform->addElement('html', \html_writer::tag('h4', get_string('ucp_disconnect_title', 'auth_oidc', $opname)));
-        $mform->addElement('html', \html_writer::div(get_string('ucp_disconnect_details', 'auth_oidc', $opname)));
+        $mform->addElement('html', \html_writer::tag('h4', get_string('ucp_disconnect_title', 'auth_voidc', $opname)));
+        $mform->addElement('html', \html_writer::div(get_string('ucp_disconnect_details', 'auth_voidc', $opname)));
         $mform->addElement('html', '<br />');
         $mform->addElement('hidden', 'redirect', $this->_customdata['redirect']);
         $mform->setType('redirect', PARAM_URL);
@@ -69,7 +69,7 @@ class disconnect extends \moodleform {
             $prevmethod = $this->_customdata['prevmethod'];
             $newmethod[] =& $mform->createElement('radio', 'newmethod', '', $prevmethod, $prevmethod, $attributes);
         }
-        $mform->addGroup($newmethod, 'newmethodar', get_string('errorauthdisconnectnewmethod', 'auth_oidc'), [' '], false);
+        $mform->addGroup($newmethod, 'newmethodar', get_string('errorauthdisconnectnewmethod', 'auth_voidc'), [' '], false);
         if (!empty($this->_customdata['prevmethod'])) {
             $mform->setDefault('newmethod', $this->_customdata['prevmethod']);
         } else if ($manualenabled === true) {
@@ -77,7 +77,7 @@ class disconnect extends \moodleform {
         }
 
         if ($manualenabled === true) {
-            $mform->addElement('html', \html_writer::div(get_string('errorauthdisconnectifmanual', 'auth_oidc')));
+            $mform->addElement('html', \html_writer::div(get_string('errorauthdisconnectifmanual', 'auth_voidc')));
             $mform->addElement('text', 'username', get_string('username'));
             $mform->addElement('passwordunmask', 'password', get_string('password'));
             $mform->setType('username', PARAM_USERNAME);

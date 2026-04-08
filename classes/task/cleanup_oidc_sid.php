@@ -17,13 +17,13 @@
 /**
  * A scheduled task to clean up oidc sid records.
  *
- * @package auth_oidc
+ * @package auth_voidc
  * @author Lai Wei <lai.wei@enovation.ie>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @copyright (C) 2021 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
-namespace auth_oidc\task;
+namespace auth_voidc\task;
 
 use core\task\scheduled_task;
 
@@ -35,7 +35,7 @@ class cleanup_oidc_sid extends scheduled_task {
      * Get a descriptive name for the task.
      */
     public function get_name() {
-        return get_string('task_cleanup_oidc_sid', 'auth_oidc');
+        return get_string('task_cleanup_oidc_sid', 'auth_voidc');
     }
 
     /**
@@ -44,6 +44,6 @@ class cleanup_oidc_sid extends scheduled_task {
     public function execute() {
         global $DB;
 
-        $DB->delete_records_select('auth_oidc_sid', 'timecreated < ?', [strtotime('-1 day')]);
+        $DB->delete_records_select('auth_voidc_sid', 'timecreated < ?', [strtotime('-1 day')]);
     }
 }

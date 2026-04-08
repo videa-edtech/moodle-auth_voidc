@@ -17,20 +17,20 @@
 /**
  * Mock http client used in unit test.
  *
- * @package auth_oidc
+ * @package auth_voidc
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
-namespace auth_oidc\tests;
+namespace auth_voidc\tests;
 
 use moodle_exception;
 
 /**
  * A mock HTTP client allowing set responses.
  */
-class mockhttpclient extends \auth_oidc\httpclient {
+class mockhttpclient extends \auth_voidc\httpclient {
     /** @var string The stored set response. */
     protected $mockresponse = '';
 
@@ -75,7 +75,7 @@ class mockhttpclient extends \auth_oidc\httpclient {
         } else {
             $this->curresponse = 0;
             if (!isset($this->mockresponse[$this->curresponse])) {
-                throw new moodle_exception('error_no_response_available', 'auth_oidc');
+                throw new moodle_exception('error_no_response_available', 'auth_voidc');
             }
             return $this->mockresponse[$this->curresponse];
         }

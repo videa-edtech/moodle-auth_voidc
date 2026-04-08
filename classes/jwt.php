@@ -17,13 +17,13 @@
 /**
  * JWT token.
  *
- * @package auth_oidc
+ * @package auth_voidc
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
-namespace auth_oidc;
+namespace auth_voidc;
 
 use moodle_exception;
 
@@ -46,13 +46,13 @@ class jwt {
      */
     public static function decode($encoded) {
         if (empty($encoded) || !is_string($encoded)) {
-            throw new moodle_exception('errorjwtempty', 'auth_oidc');
+            throw new moodle_exception('errorjwtempty', 'auth_voidc');
         }
 
         // Separate JWT into parts.
         $jwtparts = explode('.', $encoded);
         if (count($jwtparts) !== 3) {
-            throw new moodle_exception('errorjwtmalformed', 'auth_oidc');
+            throw new moodle_exception('errorjwtmalformed', 'auth_voidc');
         }
 
         // Process header.
@@ -61,10 +61,10 @@ class jwt {
             $header = @json_decode($header, true);
         }
         if (empty($header) || !is_array($header)) {
-            throw new moodle_exception('errorjwtcouldnotreadheader', 'auth_oidc');
+            throw new moodle_exception('errorjwtcouldnotreadheader', 'auth_voidc');
         }
         if (!isset($header['alg'])) {
-            throw new moodle_exception('errorjwtinvalidheader', 'auth_oidc');
+            throw new moodle_exception('errorjwtinvalidheader', 'auth_voidc');
         }
 
         // Process payload.
@@ -72,11 +72,11 @@ class jwt {
         if (in_array($header['alg'], $jwsalgs, true) === true) {
             $body = static::decode_jws($jwtparts[1]);
         } else {
-            throw new moodle_exception('errorjwtunsupportedalg', 'auth_oidc');
+            throw new moodle_exception('errorjwtunsupportedalg', 'auth_voidc');
         }
 
         if (empty($body) || !is_array($body)) {
-            throw new moodle_exception('errorjwtbadpayload', 'auth_oidc');
+            throw new moodle_exception('errorjwtbadpayload', 'auth_voidc');
         }
 
         return [$header, $body];

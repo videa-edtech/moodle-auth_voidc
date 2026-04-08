@@ -4,7 +4,7 @@
     xsi:noNamespaceSchemaLocation="../../../lib/xmldb/xmldb.xsd"
 >
   <TABLES>
-    <TABLE NAME="auth_oidc_prevlogin" COMMENT="Stores previous login methods.">
+    <TABLE NAME="auth_voidc_prevlogin" COMMENT="Stores previous login methods.">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="user id"/>
@@ -18,7 +18,7 @@
         <INDEX NAME="userid" UNIQUE="true" FIELDS="userid"/>
       </INDEXES>
     </TABLE>
-    <TABLE NAME="auth_oidc_state" COMMENT="Map of state to sesskey.">
+    <TABLE NAME="auth_voidc_state" COMMENT="Map of state to sesskey.">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="sesskey" TYPE="char" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="user sesskey"/>
@@ -35,7 +35,7 @@
         <INDEX NAME="timecreated" UNIQUE="false" FIELDS="timecreated"/>
       </INDEXES>
     </TABLE>
-    <TABLE NAME="auth_oidc_token" COMMENT="Stores tokens.">
+    <TABLE NAME="auth_voidc_token" COMMENT="Stores tokens.">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="oidcuniqid" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false" COMMENT="oidc uniqid"/>
@@ -60,7 +60,7 @@
         <INDEX NAME="username" UNIQUE="false" FIELDS="username"/>
       </INDEXES>
     </TABLE>
-    <TABLE NAME="auth_oidc_sid" COMMENT="Stores sid from IdP, to be used to find connected Moodle users when SLO is triggered from IdP.">
+    <TABLE NAME="auth_voidc_sid" COMMENT="Stores sid from IdP, to be used to find connected Moodle users when SLO is triggered from IdP.">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="userid" TYPE="int" LENGTH="20" NOTNULL="true" SEQUENCE="false"/>

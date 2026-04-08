@@ -17,15 +17,15 @@
 /**
  * Resource Owner Password Credentials Grant login flow.
  *
- * @package auth_oidc
+ * @package auth_voidc
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
-namespace auth_oidc\loginflow;
+namespace auth_voidc\loginflow;
 
-use auth_oidc\utils;
+use auth_voidc\utils;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -47,7 +47,7 @@ class rocreds extends base {
         global $DB;
 
         $user = null;
-        if (auth_oidc_is_local_365_installed()) {
+        if (auth_voidc_is_local_365_installed()) {
             $sql = 'SELECT u.username
                       FROM {local_o365_objects} obj
                       JOIN {user} u ON u.id = obj.moodleid
@@ -92,7 +92,7 @@ class rocreds extends base {
             }
         }
 
-        $autoappend = get_config('auth_oidc', 'autoappend');
+        $autoappend = get_config('auth_voidc', 'autoappend');
         if (empty($autoappend)) {
             // If we're not doing autoappend, just let things flow naturally.
             return true;
@@ -150,7 +150,7 @@ class rocreds extends base {
         $authparams = ['code' => ''];
 
         $oidcusername = $username;
-        $oidctoken = $DB->get_records('auth_oidc_token', ['username' => $username]);
+        $oidctoken = $DB->get_records('auth_voidc_token', ['username' => $username]);
         if (!empty($oidctoken)) {
             $oidctoken = array_shift($oidctoken);
             if (!empty($oidctoken) && !empty($oidctoken->oidcusername)) {
@@ -171,12 +171,12 @@ class rocreds extends base {
                 return false;
             }
 
-            $tokenrec = $DB->get_record('auth_oidc_token', ['oidcuniqid' => $oidcuniqid]);
+            $tokenrec = $DB->get_record('auth_voidc_token', ['oidcuniqid' => $oidcuniqid]);
             if (!empty($tokenrec)) {
                 $this->updatetoken($tokenrec->id, $authparams, $tokenparams);
             } else {
                 $originalupn = null;
-                if (auth_oidc_is_local_365_installed()) {
+                if (auth_voidc_is_local_365_installed()) {
                     $apiclient = \local_o365\utils::get_api();
                     $userdetails = $apiclient->get_user($oidcuniqid);
                     if (!is_null($userdetails) && isset($userdetails['userPrincipalName']) &&

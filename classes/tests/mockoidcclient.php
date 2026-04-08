@@ -17,19 +17,19 @@
 /**
  * Mock OIDC client used in unit test.
  *
- * @package auth_oidc
+ * @package auth_voidc
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
-namespace auth_oidc\tests;
+namespace auth_voidc\tests;
 
 /**
  * A mock oidcclient class providing access to all inaccessible properties/methods.
  */
-class mockoidcclient extends \auth_oidc\oidcclient {
-    /** @var \auth_oidc\httpclientinterface An HTTP client to use. */
+class mockoidcclient extends \auth_voidc\oidcclient {
+    /** @var \auth_voidc\httpclientinterface An HTTP client to use. */
     public $httpclient;
 
     /** @var array Array of endpoints. */

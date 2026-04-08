@@ -17,18 +17,18 @@
 /**
  * Definition of base login flow class.
  *
- * @package auth_oidc
+ * @package auth_voidc
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @author Lai Wei <lai.wei@enovation.ie>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
-namespace auth_oidc\loginflow;
+namespace auth_voidc\loginflow;
 
-use auth_oidc\jwt;
-use auth_oidc\oidcclient;
-use auth_oidc\utils;
+use auth_voidc\jwt;
+use auth_voidc\oidcclient;
+use auth_voidc\utils;
 use core_user;
 use moodle_exception;
 use stdClass;
@@ -44,7 +44,7 @@ class base {
     /** @var object Plugin config. */
     public $config;
 
-    /** @var \auth_oidc\httpclientinterface An HTTP client to use. */
+    /** @var \auth_voidc\httpclientinterface An HTTP client to use. */
     protected $httpclient;
 
     /**
@@ -52,9 +52,9 @@ class base {
      */
     public function __construct() {
         $default = [
-                'opname' => get_string('pluginname', 'auth_oidc'),
+                'opname' => get_string('pluginname', 'auth_voidc'),
         ];
-        $storedconfig = (array)get_config('auth_oidc');
+        $storedconfig = (array)get_config('auth_voidc');
 
         foreach ($storedconfig as $configname => $configvalue) {
             if (strpos($configname, 'field_updatelocal_') === 0 && $configvalue == 'always') {
@@ -106,7 +106,7 @@ class base {
     public function get_userinfo($username) {
         global $DB;
 
-        $tokenrec = $DB->get_record('auth_oidc_token', ['username' => $username]);
+        $tokenrec = $DB->get_record('auth_voidc_token', ['username' => $username]);
         if (empty($tokenrec)) {
             return false;
         }
@@ -121,7 +121,7 @@ class base {
 
         $fieldmappingfromtoken = true;
 
-        if (auth_oidc_is_local_365_installed()) {
+        if (auth_voidc_is_local_365_installed()) {
             // Check if multi tenants is enabled. User from additional tenants can only sync fields from token.
             $userfromadditionaltenant = false;
             $hostingtenantid = get_config('local_o365', 'entratenantid');
@@ -162,7 +162,7 @@ class base {
                         }
 
                         if (!isset($userdata['userPrincipalName'])) {
-                            if (get_config('auth_oidc', 'idptype') == AUTH_OIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM) {
+                            if (get_config('auth_voidc', 'idptype') == AUTH_VOIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM) {
                                 $upn = $token->claim('preferred_username');
                                 if (empty($upn)) {
                                     $upn = $token->claim('email');
@@ -208,7 +208,7 @@ class base {
                         }
 
                         if (!isset($userdata['bindingusernameclaim'])) {
-                            $bindingusernameclaim = auth_oidc_get_binding_username_claim();
+                            $bindingusernameclaim = auth_voidc_get_binding_username_claim();
                             if (!empty($bindingusernameclaim)) {
                                 $userdata['bindingusernameclaim'] = $token->claim($bindingusernameclaim);
                             }
@@ -249,7 +249,7 @@ class base {
                 }
 
                 if (!isset($userdata['userPrincipalName'])) {
-                    if (get_config('auth_oidc', 'idptype') == AUTH_OIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM) {
+                    if (get_config('auth_voidc', 'idptype') == AUTH_VOIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM) {
                         $upn = $token->claim('preferred_username');
                         if (empty($upn)) {
                             $upn = $token->claim('email');
@@ -295,7 +295,7 @@ class base {
                 }
 
                 if (!isset($userdata['bindingusernameclaim'])) {
-                    $bindingusernameclaim = auth_oidc_get_binding_username_claim();
+                    $bindingusernameclaim = auth_voidc_get_binding_username_claim();
                     if (!empty($bindingusernameclaim)) {
                         $userdata['bindingusernameclaim'] = $token->claim($bindingusernameclaim);
                     }
@@ -319,7 +319,7 @@ class base {
     public static function apply_configured_fieldmap_from_token(array $userdata, string $eventtype) {
         $user = new stdClass();
 
-        $fieldmappings = auth_oidc_get_field_mappings();
+        $fieldmappings = auth_voidc_get_field_mappings();
 
         foreach ($fieldmappings as $localfield => $fieldmapping) {
             $remotefield = $fieldmapping['field_map'];
@@ -341,9 +341,9 @@ class base {
     /**
      * Set an HTTP client to use.
      *
-     * @param \auth_oidc\httpclientinterface $httpclient
+     * @param \auth_voidc\httpclientinterface $httpclient
      */
-    public function set_httpclient(\auth_oidc\httpclientinterface $httpclient) {
+    public function set_httpclient(\auth_voidc\httpclientinterface $httpclient) {
         $this->httpclient = $httpclient;
     }
 
@@ -379,9 +379,9 @@ class base {
 
         if ($justremovetokens === true) {
             // Delete token data.
-            $DB->delete_records('auth_oidc_token', ['userid' => $userrec->id]);
+            $DB->delete_records('auth_voidc_token', ['userid' => $userrec->id]);
             $eventdata = ['objectid' => $userrec->id, 'userid' => $userrec->id];
-            $event = \auth_oidc\event\user_disconnected::create($eventdata);
+            $event = \auth_voidc\event\user_disconnected::create($eventdata);
             $event->trigger();
             redirect($redirect);
         } else {
@@ -392,12 +392,12 @@ class base {
             $PAGE->set_pagelayout('standard');
             $USER->editing = false;
 
-            $ucptitle = get_string('ucp_disconnect_title', 'auth_oidc', $this->config->opname);
+            $ucptitle = get_string('ucp_disconnect_title', 'auth_voidc', $this->config->opname);
             $PAGE->navbar->add($ucptitle, $PAGE->url);
             $PAGE->set_title($ucptitle);
 
             // Check if we have recorded the user's previous login method.
-            $prevmethodrec = $DB->get_record('auth_oidc_prevlogin', ['userid' => $userrec->id]);
+            $prevmethodrec = $DB->get_record('auth_voidc_prevlogin', ['userid' => $userrec->id]);
             $prevauthmethod = null;
             if (!empty($prevmethodrec) && is_enabled_auth($prevmethodrec->method) === true) {
                 $prevauthmethod = $prevmethodrec->method;
@@ -409,13 +409,13 @@ class base {
 
             // We need either the user's previous method or the manual login plugin to be enabled for disconnection.
             if (empty($prevauthmethod) && is_enabled_auth('manual') !== true) {
-                throw new moodle_exception('errornodisconnectionauthmethod', 'auth_oidc');
+                throw new moodle_exception('errornodisconnectionauthmethod', 'auth_voidc');
             }
 
             // Check to see if the user has a username created by OIDC, or a self-created username.
             // OIDC-created usernames are usually very verbose, so we'll allow them to choose a sensible one.
             // Otherwise, keep their existing username.
-            $oidctoken = $DB->get_record('auth_oidc_token', ['userid' => $userrec->id]);
+            $oidctoken = $DB->get_record('auth_voidc_token', ['userid' => $userrec->id]);
             $ccun = (isset($oidctoken->oidcuniqid) && strtolower($oidctoken->oidcuniqid) === $userrec->username) ? true : false;
             $customdata = [
                 'canchooseusername' => $ccun,
@@ -425,25 +425,25 @@ class base {
                 'userid' => $userrec->id,
             ];
 
-            $mform = new \auth_oidc\form\disconnect($selfurl, $customdata);
+            $mform = new \auth_voidc\form\disconnect($selfurl, $customdata);
 
             if ($mform->is_cancelled()) {
                 redirect($redirect);
             } else if ($fromform = $mform->get_data()) {
                 if (empty($fromform->newmethod) || ($fromform->newmethod !== $prevauthmethod &&
                         $fromform->newmethod !== 'manual')) {
-                    throw new moodle_exception('errorauthdisconnectinvalidmethod', 'auth_oidc');
+                    throw new moodle_exception('errorauthdisconnectinvalidmethod', 'auth_voidc');
                 }
 
                 $updateduser = new stdClass;
 
                 if ($fromform->newmethod === 'manual') {
                     if (empty($fromform->password)) {
-                        throw new moodle_exception('errorauthdisconnectemptypassword', 'auth_oidc');
+                        throw new moodle_exception('errorauthdisconnectemptypassword', 'auth_voidc');
                     }
                     if ($customdata['canchooseusername'] === true) {
                         if (empty($fromform->username)) {
-                            throw new moodle_exception('errorauthdisconnectemptyusername', 'auth_oidc');
+                            throw new moodle_exception('errorauthdisconnectemptyusername', 'auth_voidc');
                         }
 
                         if (strtolower($fromform->username) !== $userrec->username) {
@@ -452,7 +452,7 @@ class base {
                             if ($DB->record_exists('user', $usercheck) === false) {
                                 $updateduser->username = $newusername;
                             } else {
-                                throw new moodle_exception('errorauthdisconnectusernameexists', 'auth_oidc');
+                                throw new moodle_exception('errorauthdisconnectusernameexists', 'auth_voidc');
                             }
                         }
                     }
@@ -479,10 +479,10 @@ class base {
 
                 // Delete token data.
                 if (empty($fromform->donotremovetokens)) {
-                    $DB->delete_records('auth_oidc_token', ['userid' => $userrec->id]);
+                    $DB->delete_records('auth_voidc_token', ['userid' => $userrec->id]);
 
                     $eventdata = ['objectid' => $userrec->id, 'userid' => $userrec->id];
-                    $event = \auth_oidc\event\user_disconnected::create($eventdata);
+                    $event = \auth_voidc\event\user_disconnected::create($eventdata);
                     $event->trigger();
                 }
 
@@ -520,12 +520,12 @@ class base {
      */
     protected function get_oidcclient() {
         global $CFG;
-        if (empty($this->httpclient) || !($this->httpclient instanceof \auth_oidc\httpclientinterface)) {
-            $this->httpclient = new \auth_oidc\httpclient();
+        if (empty($this->httpclient) || !($this->httpclient instanceof \auth_voidc\httpclientinterface)) {
+            $this->httpclient = new \auth_voidc\httpclient();
         }
 
-        if (!auth_oidc_is_setup_complete()) {
-            throw new moodle_exception('errorauthnocredsandendpoints', 'auth_oidc');
+        if (!auth_voidc_is_setup_complete()) {
+            throw new moodle_exception('errorauthnocredsandendpoints', 'auth_voidc');
         }
 
         $clientid = (isset($this->config->clientid)) ? $this->config->clientid : null;
@@ -556,12 +556,12 @@ class base {
         $sub = $idtoken->claim('sub');
         if (empty($sub)) {
             utils::debug('Invalid idtoken', __METHOD__, $idtoken);
-            throw new moodle_exception('errorauthinvalididtoken', 'auth_oidc');
+            throw new moodle_exception('errorauthinvalididtoken', 'auth_voidc');
         }
         $receivednonce = $idtoken->claim('nonce');
         if (!empty($orignonce) && (empty($receivednonce) || $receivednonce !== $orignonce)) {
             utils::debug('Invalid nonce', __METHOD__, $idtoken);
-            throw new moodle_exception('errorauthinvalididtoken', 'auth_oidc');
+            throw new moodle_exception('errorauthinvalididtoken', 'auth_voidc');
         }
 
         // Use 'oid' if available (Microsoft-specific), or fall back to standard "sub" claim.
@@ -655,11 +655,11 @@ class base {
 
         // We should not fail here (idtoken was verified earlier to at least contain 'sub', but just in case...).
         if (empty($oidcusername) || empty($useridentifier)) {
-            throw new moodle_exception('errorauthinvalididtoken', 'auth_oidc');
+            throw new moodle_exception('errorauthinvalididtoken', 'auth_voidc');
         }
 
         // Cleanup old invalid token with the same oidcusername.
-        $DB->delete_records('auth_oidc_token', ['oidcusername' => $oidcusername]);
+        $DB->delete_records('auth_voidc_token', ['oidcusername' => $oidcusername]);
 
         // Handle "The existing token for this user does not contain a valid user ID" error.
         if ($userid == 0) {
@@ -688,7 +688,7 @@ class base {
         }
         $tokenrec->refreshtoken = !empty($tokenparams['refresh_token']) ? $tokenparams['refresh_token'] : ''; // TBD?
         $tokenrec->idtoken = $tokenparams['id_token'];
-        $tokenrec->id = $DB->insert_record('auth_oidc_token', $tokenrec);
+        $tokenrec->id = $DB->insert_record('auth_voidc_token', $tokenrec);
         return $tokenrec;
     }
 
@@ -714,7 +714,7 @@ class base {
         }
         $tokenrec->refreshtoken = !empty($tokenparams['refresh_token']) ? $tokenparams['refresh_token'] : ''; // TBD?
         $tokenrec->idtoken = $tokenparams['id_token'];
-        $DB->update_record('auth_oidc_token', $tokenrec);
+        $DB->update_record('auth_voidc_token', $tokenrec);
     }
 
     /**
@@ -730,16 +730,16 @@ class base {
         }
 
         if (empty($bindingusernameclaim)) {
-            $bindingusernameclaim = get_config('auth_oidc', 'bindingusernameclaim');
+            $bindingusernameclaim = get_config('auth_voidc', 'bindingusernameclaim');
             if (empty($bindingusernameclaim)) {
                 $bindingusernameclaim = 'auto';
-                set_config('bindingusernameclaim', $bindingusernameclaim, 'auth_oidc');
+                set_config('bindingusernameclaim', $bindingusernameclaim, 'auth_voidc');
             }
         }
 
         switch ($bindingusernameclaim) {
             case 'custom':
-                $bindingusernameclaim = get_config('auth_oidc', 'custombindingclaim');
+                $bindingusernameclaim = get_config('auth_voidc', 'custombindingclaim');
             case 'preferred_username':
             case 'email':
             case 'upn':
@@ -750,7 +750,7 @@ class base {
                 $oidcusername = $idtoken->claim($bindingusernameclaim);
                 break;
             case 'auto':
-                if (get_config('auth_oidc', 'idptype') == AUTH_OIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM) {
+                if (get_config('auth_voidc', 'idptype') == AUTH_VOIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM) {
                     $oidcusername = $idtoken->claim('preferred_username');
                     if (empty($oidcusername)) {
                         $oidcusername = $idtoken->claim('email');

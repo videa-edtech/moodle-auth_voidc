@@ -17,7 +17,7 @@
 /**
  * English language strings.
  *
- * @package auth_oidc
+ * @package auth_voidc
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @author Lai Wei <lai.wei@enovation.ie>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -30,7 +30,7 @@ defined('MOODLE_INTERNAL') || die();
 // phpcs:disable moodle.Files.LangFilesOrdering.UnexpectedComment
 
 $string['pluginname'] = 'OpenID Connect';
-$string['auth_oidcdescription'] = 'The OpenID Connect authentication plugin provides single-sign-on functionality using configurable IdP.';
+$string['auth_voidcdescription'] = 'The OpenID Connect authentication plugin provides single-sign-on functionality using configurable IdP.';
 
 // Configuration pages.
 $string['settings_page_other_settings'] = 'Other options';
@@ -138,7 +138,7 @@ $string['cfg_silentloginmode_desc'] = 'If enabled, Moodle will try to use the ac
 To use this feature, the following configurations are required:
 <ul>
 <li><b>Force users to log in</b> (forcelogin) in the <a href="{$a}" target="_blank">Site policies section</a> is enabled.</li>
-<li><b>Force redirect</b> (auth_oidc/forceredirect) setting above is enabled.</li>
+<li><b>Force redirect</b> (auth_voidc/forceredirect) setting above is enabled.</li>
 </ul>
 In order to avoid Moodle trying to use personal accounts or accounts from other tenants to login, it is also recommended to use tenant specific endpoints, rather than generic ones using "common" or "organization" etc. paths.<br/>
 <br/>
@@ -277,30 +277,30 @@ $string['eventusercreated'] = 'User created with OpenID Connect';
 $string['eventuserconnected'] = 'User connected to OpenID Connect';
 $string['eventuserloggedin'] = 'User Logged In with OpenID Connect';
 $string['eventuserdisconnected'] = 'User disconnected from OpenID Connect';
-$string['eventuserrenameattempt'] = 'The auth_oidc plugin attempted to rename a user';
+$string['eventuserrenameattempt'] = 'The auth_voidc plugin attempted to rename a user';
 
 $string['oidc:manageconnection'] = 'Allow OpenID Connection and Disconnection';
 $string['oidc:manageconnectionconnect'] = 'Allow OpenID Connection';
 $string['oidc:manageconnectiondisconnect'] = 'Allow OpenID Disconnection';
 
-$string['privacy:metadata:auth_oidc'] = 'OpenID Connect Authentication';
-$string['privacy:metadata:auth_oidc_prevlogin'] = 'Previous login methods to undo Microsoft 365 connections';
-$string['privacy:metadata:auth_oidc_prevlogin:userid'] = 'The ID of the Moodle user';
-$string['privacy:metadata:auth_oidc_prevlogin:method'] = 'The previous login method';
-$string['privacy:metadata:auth_oidc_prevlogin:password'] = 'The previous (encrypted) user password field.';
-$string['privacy:metadata:auth_oidc_token'] = 'OpenID Connect tokens';
-$string['privacy:metadata:auth_oidc_token:oidcuniqid'] = 'The OIDC unique user identifier.';
-$string['privacy:metadata:auth_oidc_token:username'] = 'The username of the Moodle user';
-$string['privacy:metadata:auth_oidc_token:userid'] = 'The user ID of the Moodle user';
-$string['privacy:metadata:auth_oidc_token:oidcusername'] = 'The username of the OIDC user';
-$string['privacy:metadata:auth_oidc_token:useridentifier'] = 'The user identifier of the OIDC user';
-$string['privacy:metadata:auth_oidc_token:scope'] = 'The scope of the token';
-$string['privacy:metadata:auth_oidc_token:tokenresource'] = 'The resource of the token';
-$string['privacy:metadata:auth_oidc_token:authcode'] = 'The auth code for the token';
-$string['privacy:metadata:auth_oidc_token:token'] = 'The token';
-$string['privacy:metadata:auth_oidc_token:expiry'] = 'The token expiry';
-$string['privacy:metadata:auth_oidc_token:refreshtoken'] = 'The refresh token';
-$string['privacy:metadata:auth_oidc_token:idtoken'] = 'The ID token';
+$string['privacy:metadata:auth_voidc'] = 'OpenID Connect Authentication';
+$string['privacy:metadata:auth_voidc_prevlogin'] = 'Previous login methods to undo Microsoft 365 connections';
+$string['privacy:metadata:auth_voidc_prevlogin:userid'] = 'The ID of the Moodle user';
+$string['privacy:metadata:auth_voidc_prevlogin:method'] = 'The previous login method';
+$string['privacy:metadata:auth_voidc_prevlogin:password'] = 'The previous (encrypted) user password field.';
+$string['privacy:metadata:auth_voidc_token'] = 'OpenID Connect tokens';
+$string['privacy:metadata:auth_voidc_token:oidcuniqid'] = 'The OIDC unique user identifier.';
+$string['privacy:metadata:auth_voidc_token:username'] = 'The username of the Moodle user';
+$string['privacy:metadata:auth_voidc_token:userid'] = 'The user ID of the Moodle user';
+$string['privacy:metadata:auth_voidc_token:oidcusername'] = 'The username of the OIDC user';
+$string['privacy:metadata:auth_voidc_token:useridentifier'] = 'The user identifier of the OIDC user';
+$string['privacy:metadata:auth_voidc_token:scope'] = 'The scope of the token';
+$string['privacy:metadata:auth_voidc_token:tokenresource'] = 'The resource of the token';
+$string['privacy:metadata:auth_voidc_token:authcode'] = 'The auth code for the token';
+$string['privacy:metadata:auth_voidc_token:token'] = 'The token';
+$string['privacy:metadata:auth_voidc_token:expiry'] = 'The token expiry';
+$string['privacy:metadata:auth_voidc_token:refreshtoken'] = 'The refresh token';
+$string['privacy:metadata:auth_voidc_token:idtoken'] = 'The ID token';
 
 // In the following strings, $a refers to a customizable name for the identity manager. For example, this could be
 // "Microsoft 365", "OpenID Connect", etc.
@@ -394,8 +394,8 @@ $string['binding_username_claim_description'] = '<p class="warning_header">This 
 <ol>
 <li>Make sure you have a manual site administrator account, i.e. not using OpenID Connect authentication method.</li>
 <li>Schedule enough downtime and put the Moodle site into maintenance mode.</li>
-<li>Backup Moodle database, in particular <span class="code">user</span> and <span class="code">auth_oidc_tokens</span> tables. If local_o365 plugin is installed, backup <span class="code">local_o365_objects</span> table too.</li>
-<li>Use the <a href="{$a}" target="_blank">update binding username tool</a> to update Moodle username, auth_oidc token, and other connection records of the existing user to match the value of the claim to be changed to.</li>
+<li>Backup Moodle database, in particular <span class="code">user</span> and <span class="code">auth_voidc_tokens</span> tables. If local_o365 plugin is installed, backup <span class="code">local_o365_objects</span> table too.</li>
+<li>Use the <a href="{$a}" target="_blank">update binding username tool</a> to update Moodle username, auth_voidc token, and other connection records of the existing user to match the value of the claim to be changed to.</li>
 <li>Update the binding username token setting on this page.</li>
 <li>Purge caches.</li>
 <li>Move the Moodle site out of maintenance mode.</li>
@@ -480,8 +480,8 @@ $string['change_binding_username_claim_tool_description'] = '<p class="warning_h
 <li>Find an existing Moodle user with the given <span class="code">username</span> as either username or email address, and using the OpenID Connect authentication method, and if one is found, update the username of the user to be the lowercase of <span class="code">new_username</span>.</li>
 <li>Update OpenID Connect token record.
 <ul>
-<li>If a user is found in the step 1 above, then find the token record in the <span class="code">auth_oidc_token</span> table for the user, and update <span class="code">username</span> column to be the lowercase of <span class="code">new_username</span>, and <span class="code">oidcusername</span> column to be the same as <span class="code">new_username</span>.</li>
-<li>If no record is found above, it will try to find record in the <span class="code">auth_oidc_token</span> with <span class="code">oidcusername</span> column matching the old <span class="code">username</span>, and update it to be <span class="code">newusername</span>.</li>
+<li>If a user is found in the step 1 above, then find the token record in the <span class="code">auth_voidc_token</span> table for the user, and update <span class="code">username</span> column to be the lowercase of <span class="code">new_username</span>, and <span class="code">oidcusername</span> column to be the same as <span class="code">new_username</span>.</li>
+<li>If no record is found above, it will try to find record in the <span class="code">auth_voidc_token</span> with <span class="code">oidcusername</span> column matching the old <span class="code">username</span>, and update it to be <span class="code">newusername</span>.</li>
 </ul>
 <li>Providing the <span class="code">local_365</span> plugin is installed, update user connection record.
 <ul>

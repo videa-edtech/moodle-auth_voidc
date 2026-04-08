@@ -17,19 +17,19 @@
 /**
  * Authorization Code login flow.
  *
- * @package auth_oidc
+ * @package auth_voidc
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @author Lai Wei <lai.wei@enovation.ie>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
-namespace auth_oidc\loginflow;
+namespace auth_voidc\loginflow;
 
-use auth_oidc\event\user_authed;
-use auth_oidc\event\user_rename_attempt;
-use auth_oidc\jwt;
-use auth_oidc\utils;
+use auth_voidc\event\user_authed;
+use auth_voidc\event\user_rename_attempt;
+use auth_voidc\jwt;
+use auth_voidc\utils;
 use core\output\notification;
 use core_text;
 use core_user;
@@ -54,22 +54,22 @@ class authcode extends base {
      * @return array Array of IdPs.
      */
     public function loginpage_idp_list($wantsurl) {
-        if (!auth_oidc_is_setup_complete()) {
+        if (!auth_voidc_is_setup_complete()) {
             return [];
         }
 
         if (!empty($this->config->customicon)) {
-            $icon = new pix_icon('0/customicon', get_string('pluginname', 'auth_oidc'), 'auth_oidc');
+            $icon = new pix_icon('0/customicon', get_string('pluginname', 'auth_voidc'), 'auth_voidc');
         } else {
-            $icon = (!empty($this->config->icon)) ? $this->config->icon : 'auth_oidc:o365';
+            $icon = (!empty($this->config->icon)) ? $this->config->icon : 'auth_voidc:o365';
             $icon = explode(':', $icon);
             if (isset($icon[1])) {
                 [$iconcomponent, $iconkey] = $icon;
             } else {
-                $iconcomponent = 'auth_oidc';
+                $iconcomponent = 'auth_voidc';
                 $iconkey = 'o365';
             }
-            $icon = new pix_icon($iconkey, get_string('pluginname', 'auth_oidc'), $iconcomponent);
+            $icon = new pix_icon($iconkey, get_string('pluginname', 'auth_voidc'), $iconcomponent);
         }
 
         return [
@@ -96,7 +96,7 @@ class authcode extends base {
         $valclean = preg_replace('/[^A-Za-z0-9\_\-\.\+\/\=]/i', '', $val);
         if ($valclean !== $val) {
             utils::debug('Authorization error.', __METHOD__, $name);
-            throw new moodle_exception('errorauthgeneral', 'auth_oidc');
+            throw new moodle_exception('errorauthgeneral', 'auth_voidc');
         }
         return $valclean;
     }
@@ -111,7 +111,7 @@ class authcode extends base {
 
         $error = optional_param('error', '', PARAM_TEXT);
         $errordescription = optional_param('error_description', '', PARAM_TEXT);
-        $silentloginmode = get_config('auth_oidc', 'silentloginmode');
+        $silentloginmode = get_config('auth_voidc', 'silentloginmode');
         $selectaccount = false;
         if ($silentloginmode) {
             if ($error == 'login_required') {
@@ -130,7 +130,7 @@ class authcode extends base {
             }
         }
 
-        if (get_config('auth_oidc', 'idptype') == AUTH_OIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM) {
+        if (get_config('auth_voidc', 'idptype') == AUTH_VOIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM) {
             $adminconsent = optional_param('admin_consent', '', PARAM_TEXT);
             if ($adminconsent) {
                 $state = $this->getoidcparam('state');
@@ -196,7 +196,7 @@ class authcode extends base {
         $userexists = $DB->record_exists('user', $userfilters);
 
         // Check token exists.
-        $tokenrec = $DB->get_record('auth_oidc_token', ['username' => $username]);
+        $tokenrec = $DB->get_record('auth_voidc_token', ['username' => $username]);
         $code = optional_param('code', null, PARAM_RAW);
         $tokenvalid = (!empty($tokenrec) && !empty($code) && $tokenrec->authcode === $code) ? true : false;
         return ($userexists === true && $tokenvalid === true) ? true : false;
@@ -240,18 +240,18 @@ class authcode extends base {
 
         if (!empty($authparams['error_description'])) {
             utils::debug('Authorization error.', __METHOD__, $authparams);
-            redirect($CFG->wwwroot, get_string('errorauthgeneral', 'auth_oidc'), null, notification::NOTIFY_ERROR);
+            redirect($CFG->wwwroot, get_string('errorauthgeneral', 'auth_voidc'), null, notification::NOTIFY_ERROR);
         }
 
         if (!isset($authparams['state'])) {
             utils::debug('No state received.', __METHOD__, $authparams);
-            throw new moodle_exception('errorauthunknownstate', 'auth_oidc');
+            throw new moodle_exception('errorauthunknownstate', 'auth_voidc');
         }
 
         // Validate and expire state.
-        $staterec = $DB->get_record('auth_oidc_state', ['state' => $authparams['state']]);
+        $staterec = $DB->get_record('auth_voidc_state', ['state' => $authparams['state']]);
         if (empty($staterec)) {
-            throw new moodle_exception('errorauthunknownstate', 'auth_oidc');
+            throw new moodle_exception('errorauthunknownstate', 'auth_voidc');
         }
 
         $orignonce = $staterec->nonce;
@@ -263,13 +263,13 @@ class authcode extends base {
             }
         }
         $SESSION->stateadditionaldata = $additionaldata;
-        $DB->delete_records('auth_oidc_state', ['id' => $staterec->id]);
+        $DB->delete_records('auth_voidc_state', ['id' => $staterec->id]);
 
         // Get token.
         $client = $this->get_oidcclient();
         $tokenparams = $client->app_access_token_request();
         if (!isset($tokenparams['access_token'])) {
-            throw new moodle_exception('errorauthnoaccesstoken', 'auth_oidc');
+            throw new moodle_exception('errorauthnoaccesstoken', 'auth_voidc');
         }
 
         $eventdata = [
@@ -298,23 +298,23 @@ class authcode extends base {
 
         if (!empty($authparams['error_description'])) {
             utils::debug('Authorization error.', __METHOD__, $authparams);
-            redirect($CFG->wwwroot, get_string('errorauthgeneral', 'auth_oidc'), null, notification::NOTIFY_ERROR);
+            redirect($CFG->wwwroot, get_string('errorauthgeneral', 'auth_voidc'), null, notification::NOTIFY_ERROR);
         }
 
         if (!isset($authparams['code'])) {
             utils::debug('No auth code received.', __METHOD__, $authparams);
-            throw new moodle_exception('errorauthnoauthcode', 'auth_oidc');
+            throw new moodle_exception('errorauthnoauthcode', 'auth_voidc');
         }
 
         if (!isset($authparams['state'])) {
             utils::debug('No state received.', __METHOD__, $authparams);
-            throw new moodle_exception('errorauthunknownstate', 'auth_oidc');
+            throw new moodle_exception('errorauthunknownstate', 'auth_voidc');
         }
 
         // Validate and expire state.
-        $staterec = $DB->get_record('auth_oidc_state', ['state' => $authparams['state']]);
+        $staterec = $DB->get_record('auth_voidc_state', ['state' => $authparams['state']]);
         if (empty($staterec)) {
-            throw new moodle_exception('errorauthunknownstate', 'auth_oidc');
+            throw new moodle_exception('errorauthunknownstate', 'auth_voidc');
         }
 
         $orignonce = $staterec->nonce;
@@ -326,13 +326,13 @@ class authcode extends base {
             }
         }
         $SESSION->stateadditionaldata = $additionaldata;
-        $DB->delete_records('auth_oidc_state', ['id' => $staterec->id]);
+        $DB->delete_records('auth_voidc_state', ['id' => $staterec->id]);
 
         // Get token from auth code.
         $client = $this->get_oidcclient();
         $tokenparams = $client->tokenrequest($authparams['code']);
         if (!isset($tokenparams['id_token'])) {
-            throw new moodle_exception('errorauthnoidtoken', 'auth_oidc');
+            throw new moodle_exception('errorauthnoidtoken', 'auth_voidc');
         }
 
         // Decode and verify ID token.
@@ -343,7 +343,7 @@ class authcode extends base {
         if ($passed !== true && empty($additionaldata['ignorerestrictions'])) {
             $errstr = 'User prevented from logging in due to restrictions.';
             utils::debug($errstr, __METHOD__, $idtoken);
-            throw new moodle_exception('errorrestricted', 'auth_oidc');
+            throw new moodle_exception('errorrestricted', 'auth_voidc');
         }
 
         // This is for setting the system API user.
@@ -361,7 +361,7 @@ class authcode extends base {
         }
 
         // Check if OIDC user is already migrated.
-        $tokenrec = $DB->get_record('auth_oidc_token', ['oidcuniqid' => $oidcuniqid]);
+        $tokenrec = $DB->get_record('auth_voidc_token', ['oidcuniqid' => $oidcuniqid]);
         if (isloggedin() && !isguestuser() && (empty($tokenrec) || (isset($USER->auth) && $USER->auth !== 'oidc'))) {
             // If user is already logged in and trying to link Microsoft 365 account or use it for OIDC.
             // Check if that Microsoft 365 account already exists in moodle.
@@ -379,7 +379,7 @@ class authcode extends base {
                 } else if ($additionaldata['redirect'] == '/local/o365/ucp.php') {
                     $redirect = $additionaldata['redirect'].'?action=connection&o365accountconnected=true';
                 } else {
-                    throw new moodle_exception('errorinvalidredirect_message', 'auth_oidc');
+                    throw new moodle_exception('errorinvalidredirect_message', 'auth_voidc');
                 }
                 redirect(new moodle_url($redirect));
             }
@@ -395,12 +395,12 @@ class authcode extends base {
         } else {
             // Otherwise it's a user logging in normally with OIDC.
             $this->handlelogin($oidcuniqid, $authparams, $tokenparams, $idtoken);
-            if ($USER->id && $DB->record_exists('auth_oidc_token', ['userid' => $USER->id])) {
+            if ($USER->id && $DB->record_exists('auth_voidc_token', ['userid' => $USER->id])) {
                 $authoidsidrecord = new stdClass();
                 $authoidsidrecord->userid = $USER->id;
                 $authoidsidrecord->sid = $sid;
                 $authoidsidrecord->timecreated = time();
-                $DB->insert_record('auth_oidc_sid', $authoidsidrecord);
+                $DB->insert_record('auth_voidc_sid', $authoidsidrecord);
             }
             redirect(core_login_get_return_url());
         }
@@ -419,12 +419,12 @@ class authcode extends base {
         global $USER, $DB, $CFG;
 
         // Check if OIDC user is already connected to a Moodle user.
-        $tokenrec = $DB->get_record('auth_oidc_token', ['oidcuniqid' => $oidcuniqid]);
+        $tokenrec = $DB->get_record('auth_voidc_token', ['oidcuniqid' => $oidcuniqid]);
         if (!empty($tokenrec)) {
             $existinguserparams = ['username' => $tokenrec->username, 'mnethostid' => $CFG->mnet_localhost_id];
             $existinguser = $DB->get_record('user', $existinguserparams);
             if (empty($existinguser)) {
-                $DB->delete_records('auth_oidc_token', ['id' => $tokenrec->id]);
+                $DB->delete_records('auth_voidc_token', ['id' => $tokenrec->id]);
             } else {
                 if ($USER->username === $tokenrec->username) {
                     // Already connected to current user.
@@ -438,13 +438,13 @@ class authcode extends base {
                     return true;
                 } else {
                     // OIDC user connected to user that is not us. Can't continue.
-                    throw new moodle_exception('errorauthuserconnectedtodifferent', 'auth_oidc');
+                    throw new moodle_exception('errorauthuserconnectedtodifferent', 'auth_voidc');
                 }
             }
         }
 
         // Check if Moodle user is already connected to an OIDC user.
-        $tokenrec = $DB->get_record('auth_oidc_token', ['userid' => $USER->id]);
+        $tokenrec = $DB->get_record('auth_voidc_token', ['userid' => $USER->id]);
         if (!empty($tokenrec)) {
             if ($tokenrec->oidcuniqid === $oidcuniqid) {
                 // Already connected to current user.
@@ -457,7 +457,7 @@ class authcode extends base {
                 $this->updatetoken($tokenrec->id, $authparams, $tokenparams);
                 return true;
             } else {
-                throw new moodle_exception('errorauthuseralreadyconnected', 'auth_oidc');
+                throw new moodle_exception('errorauthuseralreadyconnected', 'auth_voidc');
             }
         }
 
@@ -473,13 +473,13 @@ class authcode extends base {
                 'oidcuniqid' => $oidcuniqid,
             ],
         ];
-        $event = \auth_oidc\event\user_connected::create($eventdata);
+        $event = \auth_voidc\event\user_connected::create($eventdata);
         $event->trigger();
 
         // Switch auth method, if requested.
         if ($connectiononly !== true) {
             if ($USER->auth !== 'oidc') {
-                $DB->delete_records('auth_oidc_prevlogin', ['userid' => $USER->id]);
+                $DB->delete_records('auth_voidc_prevlogin', ['userid' => $USER->id]);
                 $userrec = $DB->get_record('user', ['id' => $USER->id]);
                 if (!empty($userrec)) {
                     $prevloginrec = [
@@ -487,7 +487,7 @@ class authcode extends base {
                         'method' => $userrec->auth,
                         'password' => $userrec->password,
                     ];
-                    $DB->insert_record('auth_oidc_prevlogin', $prevloginrec);
+                    $DB->insert_record('auth_voidc_prevlogin', $prevloginrec);
                 }
             }
             $DB->update_record('user', (object)['id' => $USER->id, 'auth' => 'oidc']);
@@ -507,7 +507,7 @@ class authcode extends base {
     protected function check_for_matched($entraidupn) {
         global $DB;
 
-        if (auth_oidc_is_local_365_installed()) {
+        if (auth_voidc_is_local_365_installed()) {
             $match = $DB->get_record('local_o365_connections', ['entraidupn' => $entraidupn]);
             if (!empty($match) && \local_o365\utils::is_o365_connected($match->muserid) !== true) {
                 return $DB->get_record('user', ['id' => $match->muserid]);
@@ -528,7 +528,7 @@ class authcode extends base {
         global $DB;
 
         $user = null;
-        if (auth_oidc_is_local_365_installed()) {
+        if (auth_voidc_is_local_365_installed()) {
             $sql = 'SELECT u.username
                       FROM {local_o365_objects} obj
                       JOIN {user} u ON u.id = obj.moodleid
@@ -551,11 +551,11 @@ class authcode extends base {
     protected function handlelogin(string $oidcuniqid, array $authparams, array $tokenparams, jwt $idtoken) {
         global $DB, $CFG;
 
-        $tokenrec = $DB->get_record('auth_oidc_token', ['oidcuniqid' => $oidcuniqid]);
+        $tokenrec = $DB->get_record('auth_voidc_token', ['oidcuniqid' => $oidcuniqid]);
 
         // Do not continue if auth plugin is not enabled.
         if (!is_enabled_auth('oidc')) {
-            throw new moodle_exception('erroroidcnotenabled', 'auth_oidc', null, null, '1');
+            throw new moodle_exception('erroroidcnotenabled', 'auth_voidc', null, null, '1');
         }
 
         // Find the latest real Microsoft username.
@@ -567,7 +567,7 @@ class authcode extends base {
         }
 
         $existingmatching = null;
-        if (auth_oidc_is_local_365_installed()) {
+        if (auth_voidc_is_local_365_installed()) {
             if ($existingmatching = $DB->get_record('local_o365_objects', ['type' => 'user', 'objectid' => $oidcuniqid])) {
                 $existinguser = core_user::get_user($existingmatching->moodleid);
                 if ($existinguser && strtolower($existingmatching->o365name) != strtolower($oidcusername) &&
@@ -594,14 +594,14 @@ class authcode extends base {
                 if (empty($user)) {
                     // Token exists, but it doesn't have a valid username.
                     // In this case, delete the token, and try to process login again.
-                    $DB->delete_records('auth_oidc_token', ['id' => $tokenrec->id]);
+                    $DB->delete_records('auth_voidc_token', ['id' => $tokenrec->id]);
                     return $this->handlelogin($oidcuniqid, $authparams, $tokenparams, $idtoken);
                 }
                 $tokenrec->userid = $user->id;
                 if ($usernamechanged) {
                     $tokenrec->useridentifier = strtolower($oidcusername);
                 }
-                $DB->update_record('auth_oidc_token', $tokenrec);
+                $DB->update_record('auth_voidc_token', $tokenrec);
             } else {
                 // Existing token with a user ID.
                 $user = $DB->get_record('user', ['id' => $tokenrec->userid]);
@@ -611,7 +611,7 @@ class authcode extends base {
                     $event = \core\event\user_login_failed::create($eventdata);
                     $event->trigger();
                     // Token is invalid, delete it.
-                    $DB->delete_records('auth_oidc_token', ['id' => $tokenrec->id]);
+                    $DB->delete_records('auth_voidc_token', ['id' => $tokenrec->id]);
                     return $this->handlelogin($oidcuniqid, $authparams, $tokenparams, $idtoken);
                 }
 
@@ -624,10 +624,10 @@ class authcode extends base {
                     $potentialduplicateuser = core_user::get_user_by_username(strtolower($oidcusername));
                     if ($potentialduplicateuser) {
                         // Username already exists, cannot change Moodle account username, throw exception.
-                        throw new moodle_exception('erroruserwithusernamealreadyexists', 'auth_oidc', null, null, '2');
+                        throw new moodle_exception('erroruserwithusernamealreadyexists', 'auth_voidc', null, null, '2');
                     } else {
                         // Username does not exist:
-                        // 1. can change Moodle account username (if the user uses auth_oidc),
+                        // 1. can change Moodle account username (if the user uses auth_voidc),
                         // 2. can change token record.
                         if ($user->auth == 'oidc') {
                             $user->username = strtolower($oidcusername);
@@ -643,11 +643,11 @@ class authcode extends base {
                         }
 
                         $tokenrec->useridentifier = $oidcusername;
-                        $DB->update_record('auth_oidc_token', $tokenrec);
+                        $DB->update_record('auth_voidc_token', $tokenrec);
                     }
 
                     // Update local_o365_objects table.
-                    if (auth_oidc_is_local_365_installed()) {
+                    if (auth_voidc_is_local_365_installed()) {
                         if ($o365objectrecord = $DB->get_record('local_o365_objects',
                             ['moodleid' => $user->id, 'type' => 'user'])) {
                             $o365objectrecord->o365name = $oidcusername;
@@ -664,7 +664,7 @@ class authcode extends base {
                 complete_user_login($user);
             } else {
                 // There was a problem in authenticate_user_login.
-                throw new moodle_exception('errorauthgeneral', 'auth_oidc', null, null, '2');
+                throw new moodle_exception('errorauthgeneral', 'auth_voidc', null, null, '2');
             }
         } else if ($usernamechanged) {
             // User has connection record, but no token; and the user has been renamed in Microsoft.
@@ -687,7 +687,7 @@ class authcode extends base {
                 $username = $oidcuniqid;
 
                 // If upn claim is missing, it can mean either the IdP is not Microsoft Entra ID, or it's a guest user.
-                if (auth_oidc_is_local_365_installed()) {
+                if (auth_voidc_is_local_365_installed()) {
                     $apiclient = \local_o365\utils::get_api();
                     $userdetails = $apiclient->get_user($oidcuniqid);
                     if (!is_null($userdetails) && isset($userdetails['userPrincipalName']) &&
@@ -703,7 +703,7 @@ class authcode extends base {
             $userwithduplicateusername = core_user::get_user_by_username($username);
             if ($userwithduplicateusername) {
                 // Cannot rename user, username already exists.
-                throw new moodle_exception('erroruserwithusernamealreadyexists', 'auth_oidc', null, null, '2');
+                throw new moodle_exception('erroruserwithusernamealreadyexists', 'auth_voidc', null, null, '2');
             } else {
                 $originalusername = $existinguser->username;
                 $existinguser->username = $username;
@@ -730,7 +730,7 @@ class authcode extends base {
                 complete_user_login($user);
             } else {
                 // There was a problem in authenticate_user_login.
-                throw new moodle_exception('errorauthgeneral', 'auth_oidc', null, null, '2');
+                throw new moodle_exception('errorauthgeneral', 'auth_voidc', null, null, '2');
             }
         } else {
             /* No existing token, user not connected. Possibilities:
@@ -747,7 +747,7 @@ class authcode extends base {
                 $username = $oidcuniqid;
 
                 // If upn claim is missing, it can mean either the IdP is not Microsoft Entra ID, or it's a guest user.
-                if (auth_oidc_is_local_365_installed()) {
+                if (auth_voidc_is_local_365_installed()) {
                     $apiclient = \local_o365\utils::get_api();
                     $userdetails = $apiclient->get_user($oidcuniqid, true);
                     if (!is_null($userdetails) && isset($userdetails['userPrincipalName']) &&
@@ -764,7 +764,7 @@ class authcode extends base {
             if (!empty($matchedwith)) {
                 if ($matchedwith->auth != 'oidc') {
                     $matchedwith->entraidupn = $username;
-                    throw new moodle_exception('errorusermatched', 'auth_oidc', null, $matchedwith);
+                    throw new moodle_exception('errorusermatched', 'auth_voidc', null, $matchedwith);
                 }
             }
             $username = trim(core_text::strtolower($username));
@@ -777,7 +777,7 @@ class authcode extends base {
                     if (!$CFG->allowaccountssameemail) {
                         $userinfo = $this->get_userinfo($username);
                         if ($DB->count_records('user', ['email' => $userinfo['email'], 'deleted' => 0]) > 0) {
-                            throw new moodle_exception('errorauthloginfaileddupemail', 'auth_oidc', null, null, '1');
+                            throw new moodle_exception('errorauthloginfaileddupemail', 'auth_voidc', null, null, '1');
                         }
                     }
                     $user = create_user_record($username, '', 'oidc');
@@ -787,29 +787,29 @@ class authcode extends base {
                     $eventdata = ['other' => ['username' => $username, 'reason' => $failurereason]];
                     $event = \core\event\user_login_failed::create($eventdata);
                     $event->trigger();
-                    throw new moodle_exception('errorauthloginfailednouser', 'auth_oidc', null, null, '1');
+                    throw new moodle_exception('errorauthloginfailednouser', 'auth_voidc', null, null, '1');
                 }
             }
 
             $user = authenticate_user_login($username, '', true);
 
             if (!empty($user)) {
-                $tokenrec = $DB->get_record('auth_oidc_token', ['id' => $tokenrec->id]);
+                $tokenrec = $DB->get_record('auth_voidc_token', ['id' => $tokenrec->id]);
                 // This should be already done in auth_plugin_oidc::user_authenticated_hook, but just in case...
                 if (!empty($tokenrec) && empty($tokenrec->userid)) {
                     $updatedtokenrec = new stdClass;
                     $updatedtokenrec->id = $tokenrec->id;
                     $updatedtokenrec->userid = $user->id;
-                    $DB->update_record('auth_oidc_token', $updatedtokenrec);
+                    $DB->update_record('auth_voidc_token', $updatedtokenrec);
                 }
                 complete_user_login($user);
             } else {
                 // There was a problem in authenticate_user_login. Clean up incomplete token record.
                 if (!empty($tokenrec)) {
-                    $DB->delete_records('auth_oidc_token', ['id' => $tokenrec->id]);
+                    $DB->delete_records('auth_voidc_token', ['id' => $tokenrec->id]);
                 }
 
-                redirect($CFG->wwwroot, get_string('errorauthgeneral', 'auth_oidc'), null, notification::NOTIFY_ERROR);
+                redirect($CFG->wwwroot, get_string('errorauthgeneral', 'auth_voidc'), null, notification::NOTIFY_ERROR);
             }
 
         }

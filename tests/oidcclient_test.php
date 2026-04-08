@@ -17,7 +17,7 @@
 /**
  * OIDC client test cases.
  *
- * @package auth_oidc
+ * @package auth_voidc
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
@@ -25,7 +25,7 @@
 
 
 
-namespace auth_oidc;
+namespace auth_voidc;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -34,7 +34,7 @@ global $CFG;
 /**
  * Tests oidcclient.
  *
- * @group auth_oidc
+ * @group auth_voidc
  * @group office365
  */
 final class oidcclient_test extends \advanced_testcase {
@@ -49,11 +49,11 @@ final class oidcclient_test extends \advanced_testcase {
     /**
      * Test getting and setting credentials.
      *
-     * @covers \auth_oidc\tests\mockoidcclient::setcreds
+     * @covers \auth_voidc\tests\mockoidcclient::setcreds
      */
     public function test_creds_getters_and_setters(): void {
-        $httpclient = new \auth_oidc\tests\mockhttpclient();
-        $client = new \auth_oidc\tests\mockoidcclient($httpclient);
+        $httpclient = new \auth_voidc\tests\mockhttpclient();
+        $client = new \auth_voidc\tests\mockoidcclient($httpclient);
 
         $this->assertNull($client->get_clientid());
         $this->assertNull($client->get_clientsecret());
@@ -112,7 +112,7 @@ final class oidcclient_test extends \advanced_testcase {
      * Test setting and getting endpoints.
      *
      * @dataProvider dataprovider_endpoints
-     * @covers \auth_oidc\tests\mockoidcclient::setendpoints
+     * @covers \auth_voidc\tests\mockoidcclient::setendpoints
      * @param array $endpoints
      * @param array $expectedexception
      */
@@ -121,8 +121,8 @@ final class oidcclient_test extends \advanced_testcase {
             $this->expectException($expectedexception[0]);
             $this->expectExceptionMessage($expectedexception[1]);
         }
-        $httpclient = new \auth_oidc\tests\mockhttpclient();
-        $client = new \auth_oidc\tests\mockoidcclient($httpclient);
+        $httpclient = new \auth_voidc\tests\mockhttpclient();
+        $client = new \auth_voidc\tests\mockoidcclient($httpclient);
         $client->setendpoints($endpoints);
 
         foreach ($endpoints as $type => $uri) {

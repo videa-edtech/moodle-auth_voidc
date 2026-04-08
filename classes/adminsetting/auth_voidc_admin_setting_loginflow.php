@@ -17,18 +17,18 @@
 /**
  * Definition of login flow selector admin setting control.
  *
- * @package auth_oidc
+ * @package auth_voidc
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
-namespace auth_oidc\adminsetting;
+namespace auth_voidc\adminsetting;
 
 /**
  * Displays the redirect URI for easier config.
  */
-class auth_oidc_admin_setting_loginflow extends \admin_setting {
+class auth_voidc_admin_setting_loginflow extends \admin_setting {
     /** @var array Array of valid login flow types. */
     protected $flowtypes = ['authcode', 'rocreds'];
 
@@ -82,8 +82,8 @@ class auth_oidc_admin_setting_loginflow extends \admin_setting {
             if ($data === $flowtype || (empty($data) && $flowtype === $this->get_defaultsetting())) {
                 $radioattrs['checked'] = 'checked';
             }
-            $typename = get_string('cfg_loginflow_'.$flowtype, 'auth_oidc');
-            $typedesc = get_string('cfg_loginflow_'.$flowtype.'_desc', 'auth_oidc');
+            $typename = get_string('cfg_loginflow_'.$flowtype, 'auth_voidc');
+            $typedesc = get_string('cfg_loginflow_'.$flowtype.'_desc', 'auth_voidc');
             $html .= \html_writer::empty_tag('input', $radioattrs);
             $html .= \html_writer::label($typename, $flowtypeid, false);
             $html .= '<br />';

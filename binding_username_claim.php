@@ -17,13 +17,13 @@
 /**
  * Manage binding username claim page.
  *
- * @package auth_oidc
+ * @package auth_voidc
  * @author Lai Wei <lai.wei@enovation.ie>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @copyright (C) 2023 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
-use auth_oidc\form\binding_username_claim;
+use auth_voidc\form\binding_username_claim;
 
 require_once(dirname(__FILE__) . '/../../config.php');
 require_once($CFG->libdir . '/adminlib.php');
@@ -35,25 +35,25 @@ $url = new moodle_url('/auth/oidc/binding_username_claim.php');
 $PAGE->set_url($url);
 $PAGE->set_context(context_system::instance());
 $PAGE->set_pagelayout('admin');
-$PAGE->set_heading(get_string('settings_page_binding_username_claim', 'auth_oidc'));
-$PAGE->set_title(get_string('settings_page_binding_username_claim', 'auth_oidc'));
+$PAGE->set_heading(get_string('settings_page_binding_username_claim', 'auth_voidc'));
+$PAGE->set_title(get_string('settings_page_binding_username_claim', 'auth_voidc'));
 
-admin_externalpage_setup('auth_oidc_binding_username_claim');
+admin_externalpage_setup('auth_voidc_binding_username_claim');
 
 require_admin();
 
 $form = new binding_username_claim(null);
 $formdata = [];
 
-// Validate auth_oidc_binding_username_claim settings.
+// Validate auth_voidc_binding_username_claim settings.
 $predefinedbindingclaims = ['auto', 'preferred_username', 'email', 'upn', 'unique_name', 'sub', 'oid', 'samaccountname'];
 
-$oidcconfig = get_config('auth_oidc');
+$oidcconfig = get_config('auth_voidc');
 if (!isset($oidcconfig->bindingusernameclaim)) {
     // Bindingusernameclaim is not set, set default value.
     $formdata['bindingusernameclaim'] = 'auto';
     $formdata['customclaimname'] = '';
-    set_config('bindingusernameclaim', 'auto', 'auth_oidc');
+    set_config('bindingusernameclaim', 'auto', 'auth_voidc');
 } else if (!$oidcconfig->bindingusernameclaim) {
     $formdata['bindingusernameclaim'] = 'auto';
     $formdata['customclaimname'] = '';
@@ -79,28 +79,28 @@ if ($form->is_cancelled()) {
             $existingsetting = $oidcconfig->$config;
             if ($fromform->$config != $existingsetting) {
                 $configchanged = true;
-                set_config($config, $fromform->$config, 'auth_oidc');
-                add_to_config_log($config, $existingsetting, $fromform->$config, 'auth_oidc');
+                set_config($config, $fromform->$config, 'auth_voidc');
+                add_to_config_log($config, $existingsetting, $fromform->$config, 'auth_voidc');
             }
         }
     }
 
     if ($configchanged) {
-        redirect($url, get_string('binding_username_claim_updated', 'auth_oidc'));
+        redirect($url, get_string('binding_username_claim_updated', 'auth_voidc'));
     } else {
         redirect($url);
     }
 }
 
-$existingclaims = auth_oidc_get_existing_claims();
+$existingclaims = auth_voidc_get_existing_claims();
 
 echo $OUTPUT->header();
 
-echo $OUTPUT->heading(get_string('binding_username_claim_heading', 'auth_oidc'));
+echo $OUTPUT->heading(get_string('binding_username_claim_heading', 'auth_voidc'));
 $bindingusernametoolurl = new moodle_url('/auth/oidc/change_binding_username_claim_tool.php');
-echo html_writer::tag('p', get_string('binding_username_claim_description', 'auth_oidc', $bindingusernametoolurl->out()));
+echo html_writer::tag('p', get_string('binding_username_claim_description', 'auth_voidc', $bindingusernametoolurl->out()));
 if ($existingclaims) {
-    echo html_writer::tag('p', get_string('binding_username_claim_description_existing_claims', 'auth_oidc',
+    echo html_writer::tag('p', get_string('binding_username_claim_description_existing_claims', 'auth_voidc',
         implode(' / ', $existingclaims)));
 }
 

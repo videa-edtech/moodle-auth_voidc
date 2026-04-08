@@ -17,7 +17,7 @@
 /**
  * Czech language strings.
  *
- * @package auth_oidc
+ * @package auth_voidc
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @author Lai Wei <lai.wei@enovation.ie>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -28,7 +28,7 @@
 // phpcs:disable moodle.Files.LangFilesOrdering.UnexpectedComment
 
 $string['pluginname'] = 'OpenID Connect';
-$string['auth_oidcdescription'] = 'Plugin OpenID Connect poskytuje funkci jednotného přihlašování pomocí konfigurovatelných poskytovatelů identity.';
+$string['auth_voidcdescription'] = 'Plugin OpenID Connect poskytuje funkci jednotného přihlašování pomocí konfigurovatelných poskytovatelů identity.';
 $string['cfg_authendpoint_key'] = 'Koncový bod autorizace';
 $string['cfg_authendpoint_desc'] = 'Identifikátor URI koncového bodu autorizace od vašeho poskytovatele identity, který se má použít.';
 $string['cfg_autoappend_key'] = 'Automaticky připojit';

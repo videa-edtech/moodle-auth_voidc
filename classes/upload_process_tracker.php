@@ -17,13 +17,13 @@
 /**
  * Process binding username claim tool upload process tracker.
  *
- * @package auth_oidc
+ * @package auth_voidc
  * @author Lai Wei <lai.wei@enovation.ie>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @copyright (C) 2023 onwards Microsoft, Inc. (http://microsoft.com/)
  */
 
-namespace auth_oidc;
+namespace auth_voidc;
 
 use html_writer;
 
@@ -44,10 +44,10 @@ class upload_process_tracker {
     public function __construct() {
         $this->headers = [
             'status' => get_string('status'),
-            'line' => get_string('csvline', 'auth_oidc'),
+            'line' => get_string('csvline', 'auth_voidc'),
             'id' => 'ID',
             'username' => get_string('username'),
-            'new_username' => get_string('new_username', 'auth_oidc'),
+            'new_username' => get_string('new_username', 'auth_voidc'),
         ];
         $this->columns = array_keys($this->headers);
     }
@@ -60,7 +60,7 @@ class upload_process_tracker {
     public function start() {
         $ci = 0;
         echo html_writer::start_tag('table', ['class' => 'generaltable boxaligncenter flexible-wrap',
-            'summary' => get_string('update_username_results', 'auth_oidc')]);
+            'summary' => get_string('update_username_results', 'auth_voidc')]);
         echo html_writer::start_tag('tr', ['class' => 'heading r0']);
         foreach ($this->headers as $header) {
             echo html_writer::tag('th', $header, ['class' => 'header c' . $ci++, 'scope' => 'col']);

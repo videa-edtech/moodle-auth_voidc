@@ -15,23 +15,23 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Privacy test for auth_oidc
+ * Privacy test for auth_voidc
  *
- * @package auth_oidc
+ * @package auth_voidc
  * @author Remote-Learner.net Inc
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @copyright (C) 2019 Remote Learner.net Inc http://www.remote-learner.net
  */
 
-namespace auth_oidc;
+namespace auth_voidc;
 
-use auth_oidc\privacy\provider;
+use auth_voidc\privacy\provider;
 
 /**
- * Privacy test for auth_oidc
+ * Privacy test for auth_voidc
  *
- * @group auth_oidc
- * @group auth_oidc_privacy
+ * @group auth_voidc
+ * @group auth_voidc_privacy
  * @group office365
  * @group office365_privacy
  */
@@ -49,7 +49,7 @@ final class privacy_provider_test extends \core_privacy\tests\provider_testcase 
     /**
      * Check that a user context is returned if there is any user data for this user.
      *
-     * @covers \auth_oidc\privacy\provider::get_contexts_for_userid
+     * @covers \auth_voidc\privacy\provider::get_contexts_for_userid
      */
     public function test_get_contexts_for_userid(): void {
         $user = $this->getDataGenerator()->create_user();
@@ -71,12 +71,12 @@ final class privacy_provider_test extends \core_privacy\tests\provider_testcase 
     /**
      * Test that only users with a user context are fetched.
      *
-     * @covers \auth_oidc\privacy\provider::get_users_in_context
+     * @covers \auth_voidc\privacy\provider::get_users_in_context
      */
     public function test_get_users_in_context(): void {
         $this->resetAfterTest();
 
-        $component = 'auth_oidc';
+        $component = 'auth_voidc';
         // Create a user.
         $user = $this->getDataGenerator()->create_user();
         $usercontext = \context_user::instance($user->id);
@@ -106,7 +106,7 @@ final class privacy_provider_test extends \core_privacy\tests\provider_testcase 
     /**
      * Test that user data is exported correctly.
      *
-     * @covers \auth_oidc\privacy\provider::export_user_data
+     * @covers \auth_voidc\privacy\provider::export_user_data
      */
     public function test_export_user_data(): void {
         // Create a user record.
@@ -118,19 +118,19 @@ final class privacy_provider_test extends \core_privacy\tests\provider_testcase 
 
         $writer = \core_privacy\local\request\writer::with_context($usercontext);
         $this->assertFalse($writer->has_any_data());
-        $approvedlist = new \core_privacy\local\request\approved_contextlist($user, 'auth_oidc', [$usercontext->id]);
+        $approvedlist = new \core_privacy\local\request\approved_contextlist($user, 'auth_voidc', [$usercontext->id]);
         provider::export_user_data($approvedlist);
         // Token.
         $data = $writer->get_data([
-                get_string('privacy:metadata:auth_oidc', 'auth_oidc'),
-                get_string('privacy:metadata:auth_oidc_token', 'auth_oidc'),
+                get_string('privacy:metadata:auth_voidc', 'auth_voidc'),
+                get_string('privacy:metadata:auth_voidc_token', 'auth_voidc'),
         ]);
         $this->assertEquals($tokenrecord->userid, $data->userid);
         $this->assertEquals($tokenrecord->token, $data->token);
         // Previous login.
         $data = $writer->get_data([
-                get_string('privacy:metadata:auth_oidc', 'auth_oidc'),
-                get_string('privacy:metadata:auth_oidc_prevlogin', 'auth_oidc'),
+                get_string('privacy:metadata:auth_voidc', 'auth_voidc'),
+                get_string('privacy:metadata:auth_voidc_prevlogin', 'auth_voidc'),
         ]);
         $this->assertEquals($prevloginrecord->userid, $data->userid);
         $this->assertEquals($prevloginrecord->method, $data->method);
@@ -140,7 +140,7 @@ final class privacy_provider_test extends \core_privacy\tests\provider_testcase 
     /**
      * Test deleting all user data for a specific context.
      *
-     * @covers \auth_oidc\privacy\provider::delete_data_for_all_users_in_context
+     * @covers \auth_voidc\privacy\provider::delete_data_for_all_users_in_context
      */
     public function test_delete_data_for_all_users_in_context(): void {
         global $DB;
@@ -156,24 +156,24 @@ final class privacy_provider_test extends \core_privacy\tests\provider_testcase 
         self::create_prevlogin($user2->id);
 
         // Get all accounts. There should be two.
-        $this->assertCount(2, $DB->get_records('auth_oidc_token', []));
-        $this->assertCount(2, $DB->get_records('auth_oidc_prevlogin', []));
+        $this->assertCount(2, $DB->get_records('auth_voidc_token', []));
+        $this->assertCount(2, $DB->get_records('auth_voidc_prevlogin', []));
 
         // Delete everything for the first user context.
         provider::delete_data_for_all_users_in_context($user1context);
 
-        $this->assertCount(0, $DB->get_records('auth_oidc_token', ['userid' => $user1->id]));
-        $this->assertCount(0, $DB->get_records('auth_oidc_prevlogin', ['userid' => $user1->id]));
+        $this->assertCount(0, $DB->get_records('auth_voidc_token', ['userid' => $user1->id]));
+        $this->assertCount(0, $DB->get_records('auth_voidc_prevlogin', ['userid' => $user1->id]));
 
         // Get all accounts. There should be one.
-        $this->assertCount(1, $DB->get_records('auth_oidc_token', []));
-        $this->assertCount(1, $DB->get_records('auth_oidc_prevlogin', []));
+        $this->assertCount(1, $DB->get_records('auth_voidc_token', []));
+        $this->assertCount(1, $DB->get_records('auth_voidc_prevlogin', []));
     }
 
     /**
      * This should work identical to the above test.
      *
-     * @covers \auth_oidc\privacy\provider::delete_data_for_user
+     * @covers \auth_voidc\privacy\provider::delete_data_for_user
      */
     public function test_delete_data_for_user(): void {
         global $DB;
@@ -189,30 +189,30 @@ final class privacy_provider_test extends \core_privacy\tests\provider_testcase 
         self::create_prevlogin($user2->id);
 
         // Get all accounts. There should be two.
-        $this->assertCount(2, $DB->get_records('auth_oidc_token', []));
-        $this->assertCount(2, $DB->get_records('auth_oidc_prevlogin', []));
+        $this->assertCount(2, $DB->get_records('auth_voidc_token', []));
+        $this->assertCount(2, $DB->get_records('auth_voidc_prevlogin', []));
 
         // Delete everything for the first user.
-        $approvedlist = new \core_privacy\local\request\approved_contextlist($user1, 'auth_oidc', [$user1context->id]);
+        $approvedlist = new \core_privacy\local\request\approved_contextlist($user1, 'auth_voidc', [$user1context->id]);
         provider::delete_data_for_user($approvedlist);
 
-        $this->assertCount(0, $DB->get_records('auth_oidc_token', ['userid' => $user1->id]));
-        $this->assertCount(0, $DB->get_records('auth_oidc_prevlogin', ['userid' => $user1->id]));
+        $this->assertCount(0, $DB->get_records('auth_voidc_token', ['userid' => $user1->id]));
+        $this->assertCount(0, $DB->get_records('auth_voidc_prevlogin', ['userid' => $user1->id]));
 
         // Get all accounts. There should be one.
-        $this->assertCount(1, $DB->get_records('auth_oidc_token', []));
-        $this->assertCount(1, $DB->get_records('auth_oidc_prevlogin', []));
+        $this->assertCount(1, $DB->get_records('auth_voidc_token', []));
+        $this->assertCount(1, $DB->get_records('auth_voidc_prevlogin', []));
     }
 
     /**
      * Test that data for users in approved userlist is deleted.
      *
-     * @covers \auth_oidc\privacy\provider::delete_data_for_users
+     * @covers \auth_voidc\privacy\provider::delete_data_for_users
      */
     public function test_delete_data_for_users(): void {
         $this->resetAfterTest();
 
-        $component = 'auth_oidc';
+        $component = 'auth_voidc';
         // Create user1.
         $user1 = $this->getDataGenerator()->create_user();
         $usercontext1 = \context_user::instance($user1->id);
@@ -290,7 +290,7 @@ final class privacy_provider_test extends \core_privacy\tests\provider_testcase 
         $record->expiry = 12345;
         $record->refreshtoken = "refresh123";
         $record->idtoken = "idtoken123";
-        $record->id = $DB->insert_record('auth_oidc_token', $record);
+        $record->id = $DB->insert_record('auth_voidc_token', $record);
         return $record;
     }
 
@@ -307,7 +307,7 @@ final class privacy_provider_test extends \core_privacy\tests\provider_testcase 
         $record->userid = $userid;
         $record->method = "manual";
         $record->password = "abc123";
-        $record->id = $DB->insert_record('auth_oidc_prevlogin', $record);
+        $record->id = $DB->insert_record('auth_voidc_prevlogin', $record);
         return $record;
     }
 

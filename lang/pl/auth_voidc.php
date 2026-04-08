@@ -17,7 +17,7 @@
 /**
  * Polish language strings.
  *
- * @package auth_oidc
+ * @package auth_voidc
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @author Lai Wei <lai.wei@enovation.ie>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -28,7 +28,7 @@
 // phpcs:disable moodle.Files.LangFilesOrdering.UnexpectedComment
 
 $string['pluginname'] = 'OpenID Connect';
-$string['auth_oidcdescription'] = 'Wtyczka OpenID Connect udostępnia funkcję rejestracji jednokrotnej przy użyciu dostawców tożsamości, których można skonfigurować.';
+$string['auth_voidcdescription'] = 'Wtyczka OpenID Connect udostępnia funkcję rejestracji jednokrotnej przy użyciu dostawców tożsamości, których można skonfigurować.';
 $string['cfg_authendpoint_key'] = 'Punkt końcowy autoryzacji';
 $string['cfg_authendpoint_desc'] = 'Identyfikator URI punktu końcowego autoryzacji od dostawcy tożsamości do wykorzystania.';
 $string['cfg_autoappend_key'] = 'Dołączaj automatycznie';
