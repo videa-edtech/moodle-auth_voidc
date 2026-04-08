@@ -64,7 +64,7 @@ class httpclient extends \curl implements \auth_voidc\httpclientinterface {
     protected function get_plugin_version() {
         global $CFG;
         $plugin = new \stdClass;
-        require_once($CFG->dirroot.'/auth/oidc/version.php');
+        require_once($CFG->dirroot.'/auth/voidc/version.php');
         return (isset($plugin->release)) ? $plugin->release : 'unknown';
     }
 

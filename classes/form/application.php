@@ -111,11 +111,6 @@ class application extends moodleform {
             $errors['clientsecret'] = get_string('error_empty_client_secret', 'auth_voidc');
         }
 
-        // Validate oidcresource.
-        if (empty(trim($data['oidcresource']))) {
-            $errors['oidcresource'] = get_string('error_empty_oidcresource', 'auth_voidc');
-        }
-
         return $errors;
     }
 }

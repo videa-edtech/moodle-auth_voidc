@@ -74,7 +74,7 @@ class authcode extends base {
 
         return [
             [
-                'url' => new moodle_url('/auth/oidc/', ['source' => 'loginpage']),
+                'url' => new moodle_url('/auth/voidc/', ['source' => 'loginpage']),
                 'icon' => $icon,
                 'name' => strip_tags(format_text($this->config->opname)),
             ],
@@ -178,7 +178,7 @@ class authcode extends base {
         global $CFG, $DB;
 
         // Check user exists.
-        $userfilters = ['username' => $username, 'mnethostid' => $CFG->mnet_localhost_id, 'auth' => 'oidc'];
+        $userfilters = ['username' => $username, 'mnethostid' => $CFG->mnet_localhost_id, 'auth' => 'voidc'];
         $userexists = $DB->record_exists('user', $userfilters);
 
         // Check token exists.
@@ -278,7 +278,7 @@ class authcode extends base {
 
         // Check if OIDC user is already migrated.
         $tokenrec = $DB->get_record('auth_voidc_token', ['oidcuniqid' => $oidcuniqid]);
-        if (isloggedin() && !isguestuser() && (empty($tokenrec) || (isset($USER->auth) && $USER->auth !== 'oidc'))) {
+        if (isloggedin() && !isguestuser() && (empty($tokenrec) || (isset($USER->auth) && $USER->auth !== 'voidc'))) {
             // If user is already logged in and trying to link OIDC account or use it for OIDC.
             // Check if that OIDC account already exists in moodle.
             $oidcusername = $this->get_oidc_username_from_token_claim($idtoken);
@@ -338,11 +338,11 @@ class authcode extends base {
             } else {
                 if ($USER->username === $tokenrec->username) {
                     // Already connected to current user.
-                    if ($connectiononly !== true && $USER->auth !== 'oidc') {
+                    if ($connectiononly !== true && $USER->auth !== 'voidc') {
                         // Update auth plugin.
-                        $DB->update_record('user', (object)['id' => $USER->id, 'auth' => 'oidc']);
+                        $DB->update_record('user', (object)['id' => $USER->id, 'auth' => 'voidc']);
                         $USER = $DB->get_record('user', ['id' => $USER->id]);
-                        $USER->auth = 'oidc';
+                        $USER->auth = 'voidc';
                     }
                     $this->updatetoken($tokenrec->id, $authparams, $tokenparams);
                     return true;
@@ -358,11 +358,11 @@ class authcode extends base {
         if (!empty($tokenrec)) {
             if ($tokenrec->oidcuniqid === $oidcuniqid) {
                 // Already connected to current user.
-                if ($connectiononly !== true && $USER->auth !== 'oidc') {
+                if ($connectiononly !== true && $USER->auth !== 'voidc') {
                     // Update auth plugin.
-                    $DB->update_record('user', (object)['id' => $USER->id, 'auth' => 'oidc']);
+                    $DB->update_record('user', (object)['id' => $USER->id, 'auth' => 'voidc']);
                     $USER = $DB->get_record('user', ['id' => $USER->id]);
-                    $USER->auth = 'oidc';
+                    $USER->auth = 'voidc';
                 }
                 $this->updatetoken($tokenrec->id, $authparams, $tokenparams);
                 return true;
@@ -388,7 +388,7 @@ class authcode extends base {
 
         // Switch auth method, if requested.
         if ($connectiononly !== true) {
-            if ($USER->auth !== 'oidc') {
+            if ($USER->auth !== 'voidc') {
                 $DB->delete_records('auth_voidc_prevlogin', ['userid' => $USER->id]);
                 $userrec = $DB->get_record('user', ['id' => $USER->id]);
                 if (!empty($userrec)) {
@@ -400,9 +400,9 @@ class authcode extends base {
                     $DB->insert_record('auth_voidc_prevlogin', $prevloginrec);
                 }
             }
-            $DB->update_record('user', (object)['id' => $USER->id, 'auth' => 'oidc']);
+            $DB->update_record('user', (object)['id' => $USER->id, 'auth' => 'voidc']);
             $USER = $DB->get_record('user', ['id' => $USER->id]);
-            $USER->auth = 'oidc';
+            $USER->auth = 'voidc';
         }
 
         return true;
@@ -422,7 +422,7 @@ class authcode extends base {
         $tokenrec = $DB->get_record('auth_voidc_token', ['oidcuniqid' => $oidcuniqid]);
 
         // Do not continue if auth plugin is not enabled.
-        if (!is_enabled_auth('oidc')) {
+        if (!is_enabled_auth('voidc')) {
             throw new moodle_exception('erroroidcnotenabled', 'auth_voidc', null, null, '1');
         }
 
@@ -483,7 +483,7 @@ class authcode extends base {
                         // Username does not exist:
                         // 1. can change Moodle account username (if the user uses auth_voidc),
                         // 2. can change token record.
-                        if ($user->auth == 'oidc') {
+                        if ($user->auth == 'voidc') {
                             $user->username = strtolower($oidcusername);
                             user_update_user($user, false);
 
@@ -539,7 +539,7 @@ class authcode extends base {
                             throw new moodle_exception('errorauthloginfaileddupemail', 'auth_voidc', null, null, '1');
                         }
                     }
-                    $user = create_user_record($username, '', 'oidc');
+                    $user = create_user_record($username, '', 'voidc');
                 } else {
                     // Trigger login failed event.
                     $failurereason = AUTH_LOGIN_NOUSER;

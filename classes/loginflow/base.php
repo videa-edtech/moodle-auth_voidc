@@ -558,7 +558,7 @@ class base {
         $tokenrec->userid = $userid;
         $tokenrec->oidcusername = $oidcusername;
         $tokenrec->useridentifier = $useridentifier;
-        $tokenrec->tokenresource = !empty($tokenparams['resource']) ? $tokenparams['resource'] : $this->config->oidcresource;
+        $tokenrec->tokenresource = !empty($tokenparams['resource']) ? $tokenparams['resource'] : ($this->config->oidcresource ?? '');
         $tokenrec->scope = !empty($tokenparams['scope']) ? $tokenparams['scope'] : $this->config->oidcscope;
         $tokenrec->authcode = $authparams['code'];
         $tokenrec->token = $tokenparams['access_token'];

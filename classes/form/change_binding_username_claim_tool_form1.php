@@ -43,7 +43,7 @@ class change_binding_username_claim_tool_form1 extends moodleform {
     protected function definition() {
         $mform =& $this->_form;
 
-        $url = new moodle_url('/auth/oidc/example.csv');
+        $url = new moodle_url('/auth/voidc/example.csv');
         $link = html_writer::link($url, 'example.csv');
         $mform->addElement('static', 'example.csv', get_string('examplecsv', 'auth_voidc'), $link);
 

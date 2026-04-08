@@ -35,12 +35,12 @@ require_once($CFG->dirroot . '/auth/voidc/lib.php');
 
 if ($hassiteconfig) {
     // Add folder for OIDC settings.
-    $oidcfolder = new admin_category('oidcfolder', get_string('pluginname', 'auth_voidc'));
-    $ADMIN->add('authsettings', $oidcfolder);
+    $voidcfolder = new admin_category('voidcfolder', get_string('pluginname', 'auth_voidc'));
+    $ADMIN->add('authsettings', $voidcfolder);
 
     // Application configuration page.
-    $ADMIN->add('oidcfolder', new admin_externalpage('auth_voidc_application', get_string('settings_page_application', 'auth_voidc'),
-        new moodle_url('/auth/oidc/manageapplication.php')));
+    $ADMIN->add('voidcfolder', new admin_externalpage('auth_voidc_application', get_string('settings_page_application', 'auth_voidc'),
+        new moodle_url('/auth/voidc/manageapplication.php')));
 
 
     // Other settings page and its settings.
@@ -55,7 +55,7 @@ if ($hassiteconfig) {
         get_string('cfg_redirecturi_key', 'auth_voidc'), get_string('cfg_redirecturi_desc', 'auth_voidc'), utils::get_redirecturl()));
 
     // Link to authentication options.
-    $authenticationconfigurationurl = new moodle_url('/auth/oidc/manageapplication.php');
+    $authenticationconfigurationurl = new moodle_url('/auth/voidc/manageapplication.php');
     $settings->add(new admin_setting_description('auth_voidc/authenticationlink',
         get_string('settings_page_application', 'auth_voidc'),
         get_string('cfg_authenticationlink_desc', 'auth_voidc', $authenticationconfigurationurl->out())));
@@ -234,15 +234,15 @@ if ($hassiteconfig) {
     $settings->add(new admin_setting_configcheckbox('auth_voidc/debugmode',
         get_string('cfg_debugmode_key', 'auth_voidc'), get_string('cfg_debugmode_desc', 'auth_voidc'), '0'));
 
-    $ADMIN->add('oidcfolder', $settings);
+    $ADMIN->add('voidcfolder', $settings);
 
     // Cleanup OIDC tokens page.
-    $ADMIN->add('oidcfolder', new admin_externalpage('auth_voidc_cleanup_oidc_tokens',
-        get_string('settings_page_cleanup_oidc_tokens', 'auth_voidc'), new moodle_url('/auth/oidc/cleanupoidctokens.php')));
+    $ADMIN->add('voidcfolder', new admin_externalpage('auth_voidc_cleanup_oidc_tokens',
+        get_string('settings_page_cleanup_oidc_tokens', 'auth_voidc'), new moodle_url('/auth/voidc/cleanupoidctokens.php')));
 
     // Other settings page and its settings.
     $fieldmappingspage = new admin_settingpage('auth_voidc_field_mapping', get_string('settings_page_field_mapping', 'auth_voidc'));
-    $ADMIN->add('oidcfolder', $fieldmappingspage);
+    $ADMIN->add('voidcfolder', $fieldmappingspage);
 
     // Display locking / mapping of profile fields.
     $authplugin = get_auth_plugin('oidc');

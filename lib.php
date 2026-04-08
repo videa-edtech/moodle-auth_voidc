@@ -53,7 +53,7 @@ function auth_voidc_initialize_customicon($filefullname) {
     if (!($file = $fs->get_file_by_hash(sha1($fullpath))) || $file->is_directory()) {
         return false;
     }
-    $pixpluginsdir = 'pix_plugins/auth/oidc/0';
+    $pixpluginsdir = 'pix_plugins/auth/voidc/0';
     $pixpluginsdirparts = explode('/', $pixpluginsdir);
     $curdir = $CFG->dataroot;
     foreach ($pixpluginsdirparts as $dir) {
@@ -63,8 +63,8 @@ function auth_voidc_initialize_customicon($filefullname) {
         }
     }
 
-    if (file_exists($CFG->dataroot . '/pix_plugins/auth/oidc/0')) {
-        $file->copy_content_to($CFG->dataroot . '/pix_plugins/auth/oidc/0/customicon.jpg');
+    if (file_exists($CFG->dataroot . '/pix_plugins/auth/voidc/0')) {
+        $file->copy_content_to($CFG->dataroot . '/pix_plugins/auth/voidc/0/customicon.jpg');
         theme_reset_all_caches();
     }
 }
@@ -134,7 +134,7 @@ function auth_voidc_get_tokens_with_empty_ids() {
         $item->oidcuniqueid = $record->oidcuniqid;
         $item->matchingstatus = get_string('unmatched', 'auth_voidc');
         $item->details = get_string('na', 'auth_voidc');
-        $deletetokenurl = new moodle_url('/auth/oidc/cleanupoidctokens.php', ['id' => $record->id]);
+        $deletetokenurl = new moodle_url('/auth/voidc/cleanupoidctokens.php', ['id' => $record->id]);
         $item->action = html_writer::link($deletetokenurl, get_string('delete_token', 'auth_voidc'));
 
         $emptyuseridtokens[$record->id] = $item;
@@ -170,7 +170,7 @@ function auth_voidc_get_tokens_with_mismatched_usernames() {
         $item->matchingstatus = get_string('mismatched', 'auth_voidc');
         $item->details = get_string('mismatched_details', 'auth_voidc',
             ['tokenusername' => $record->tokenusername, 'moodleusername' => $record->musername]);
-        $deletetokenurl = new moodle_url('/auth/oidc/cleanupoidctokens.php', ['id' => $record->id]);
+        $deletetokenurl = new moodle_url('/auth/voidc/cleanupoidctokens.php', ['id' => $record->id]);
         $item->action = html_writer::link($deletetokenurl, get_string('delete_token_and_reference', 'auth_voidc'));
 
         $mismatchedtokens[$record->id] = $item;
@@ -516,14 +516,9 @@ function auth_voidc_config_name_in_form(string $stringid) {
  */
 function auth_voidc_is_setup_complete() {
     $pluginconfig = get_config('auth_voidc');
-    if (empty($pluginconfig->clientid) || empty($pluginconfig->clientauthmethod)) {
-        return false;
-    }
 
-    if ($pluginconfig->clientauthmethod == AUTH_VOIDC_AUTH_METHOD_SECRET) {
-        if (empty($pluginconfig->clientsecret)) {
-            return false;
-        }
+    if (empty($pluginconfig->clientid) || empty($pluginconfig->clientsecret)) {
+        return false;
     }
 
     if (empty($pluginconfig->authendpoint) || empty($pluginconfig->tokenendpoint)) {

@@ -58,7 +58,7 @@ if (!empty($action)) {
         throw new moodle_exception('errorucpinvalidaction', 'auth_voidc');
     }
 } else {
-    $PAGE->set_url('/auth/oidc/ucp.php');
+    $PAGE->set_url('/auth/voidc/ucp.php');
     $usercontext = \context_user::instance($USER->id);
     $PAGE->set_context(\context_system::instance());
     $PAGE->set_pagelayout('standard');
@@ -88,7 +88,7 @@ if (!empty($action)) {
         echo \html_writer::tag('h4', get_string('ucp_status_enabled', 'auth_voidc'), ['class' => 'notifysuccess']);
         if (is_enabled_auth('manual') === true) {
             if (auth_voidc_connectioncapability($USER->id, 'disconnect')) {
-                $connectlinkuri = new \moodle_url('/auth/oidc/ucp.php', ['action' => 'disconnectlogin']);
+                $connectlinkuri = new \moodle_url('/auth/voidc/ucp.php', ['action' => 'disconnectlogin']);
                 $strdisconnect = get_string('ucp_login_stop', 'auth_voidc', $opname);
                 $linkhtml = \html_writer::link($connectlinkuri, $strdisconnect);
                 echo \html_writer::tag('h5', $linkhtml);
@@ -98,7 +98,7 @@ if (!empty($action)) {
     } else {
         echo \html_writer::tag('h4', get_string('ucp_status_disabled', 'auth_voidc'), ['class' => 'notifyproblem']);
         if (auth_voidc_connectioncapability($USER->id, 'connect')) {
-            $connectlinkuri = new \moodle_url('/auth/oidc/ucp.php', ['action' => 'connectlogin']);
+            $connectlinkuri = new \moodle_url('/auth/voidc/ucp.php', ['action' => 'connectlogin']);
             $linkhtml = \html_writer::link($connectlinkuri, get_string('ucp_login_start', 'auth_voidc', $opname));
             echo \html_writer::tag('h5', $linkhtml);
             echo \html_writer::span(get_string('ucp_login_start_desc', 'auth_voidc', $opname));
