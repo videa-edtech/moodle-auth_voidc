@@ -86,24 +86,24 @@ function auth_voidc_connectioncapability($userid, $mode = 'connect', $require = 
     if ($require) {
         // If requiring the capability and user has manageconnection than checking connect and disconnect is not needed.
         $check = 'require_capability';
-        if (has_capability('auth/oidc:manageconnection', \context_user::instance($userid), $userid)) {
+        if (has_capability('auth/voidc:manageconnection', \context_user::instance($userid), $userid)) {
             return true;
         }
-    } else if ($check('auth/oidc:manageconnection', \context_user::instance($userid), $userid)) {
+    } else if ($check('auth/voidc:manageconnection', \context_user::instance($userid), $userid)) {
         return true;
     }
 
     $result = false;
     switch ($mode) {
         case "connect":
-            $result = $check('auth/oidc:manageconnectionconnect', \context_user::instance($userid), $userid);
+            $result = $check('auth/voidc:manageconnectionconnect', \context_user::instance($userid), $userid);
             break;
         case "disconnect":
-            $result = $check('auth/oidc:manageconnectiondisconnect', \context_user::instance($userid), $userid);
+            $result = $check('auth/voidc:manageconnectiondisconnect', \context_user::instance($userid), $userid);
             break;
         case "both":
-            $result = $check('auth/oidc:manageconnectionconnect', \context_user::instance($userid), $userid);
-            $result = $result && $check('auth/oidc:manageconnectiondisconnect', \context_user::instance($userid), $userid);
+            $result = $check('auth/voidc:manageconnectionconnect', \context_user::instance($userid), $userid);
+            $result = $result && $check('auth/voidc:manageconnectiondisconnect', \context_user::instance($userid), $userid);
     }
     if ($require) {
         return true;

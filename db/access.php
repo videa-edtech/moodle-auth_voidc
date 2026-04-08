@@ -28,19 +28,19 @@ defined('MOODLE_INTERNAL') || die();
 global $CFG;
 
 $capabilities = [
-        'auth/oidc:manageconnection' => [
+        'auth/voidc:manageconnection' => [
                 'riskbitmask' => RISK_CONFIG,
                 'captype' => 'write',
                 'contextlevel' => CONTEXT_USER,
                 'archetypes' => [],
         ],
-        'auth/oidc:manageconnectionconnect' => [
+        'auth/voidc:manageconnectionconnect' => [
                 'riskbitmask' => RISK_CONFIG,
                 'captype' => 'write',
                 'contextlevel' => CONTEXT_USER,
                 'archetypes' => [],
         ],
-        'auth/oidc:manageconnectiondisconnect' => [
+        'auth/voidc:manageconnectiondisconnect' => [
                 'riskbitmask' => RISK_CONFIG,
                 'captype' => 'write',
                 'contextlevel' => CONTEXT_USER,
