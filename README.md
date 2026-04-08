@@ -18,6 +18,6 @@ GPLv3 — see [LICENSE](LICENSE)
 
 ## Copyright
 
-&copy; 2024 onwards Videa Edtech Ltd.
+&copy; 2024 onwards Videa Edtech Jsc.
 
 Originally forked from [moodle-auth_oidc](https://github.com/microsoft/moodle-auth_oidc) &copy; Microsoft, Inc.
