@@ -284,7 +284,7 @@ final class privacy_provider_test extends \core_privacy\tests\provider_testcase 
         $record->oidcusername = "user@example.com";
         $record->useridentifier = "user@example.com";
         $record->scope = "All";
-        $record->tokenresource = "https://graph.microsoft.com";
+        $record->tokenresource = "https://example.com/api";
         $record->authcode = "authcode123";
         $record->token = "token123";
         $record->expiry = 12345;

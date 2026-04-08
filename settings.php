@@ -21,7 +21,7 @@
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @author Lai Wei <lai.wei@enovation.ie>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
+ * @copyright (C) 2024 onwards Videa Edtech Ltd.
  */
 
 defined('MOODLE_INTERNAL') || die();
@@ -31,7 +31,7 @@ use auth_voidc\adminsetting\auth_voidc_admin_setting_loginflow;
 use auth_voidc\adminsetting\auth_voidc_admin_setting_redirecturi;
 use auth_voidc\utils;
 
-require_once($CFG->dirroot . '/auth/oidc/lib.php');
+require_once($CFG->dirroot . '/auth/voidc/lib.php');
 
 if ($hassiteconfig) {
     // Add folder for OIDC settings.
@@ -41,20 +41,6 @@ if ($hassiteconfig) {
     // Application configuration page.
     $ADMIN->add('oidcfolder', new admin_externalpage('auth_voidc_application', get_string('settings_page_application', 'auth_voidc'),
         new moodle_url('/auth/oidc/manageapplication.php')));
-
-
-    $idptype = get_config('auth_voidc', 'idptype');
-    if ($idptype) {
-        // Binding username claim page.
-        $ADMIN->add('oidcfolder', new admin_externalpage('auth_voidc_binding_username_claim',
-            get_string('settings_page_binding_username_claim', 'auth_voidc'),
-            new moodle_url('/auth/oidc/binding_username_claim.php')));
-
-        // Change binding username claim tool page.
-        $ADMIN->add('oidcfolder', new admin_externalpage('auth_voidc_change_binding_username_claim_tool',
-            get_string('settings_page_change_binding_username_claim_tool', 'auth_voidc'),
-            new moodle_url('/auth/oidc/change_binding_username_claim_tool.php')));
-    }
 
 
     // Other settings page and its settings.
@@ -134,7 +120,7 @@ if ($hassiteconfig) {
     // IdP logout endpoint.
     $settings->add(new admin_setting_configtext('auth_voidc/logouturi',
         get_string('cfg_logoutendpoint_key', 'auth_voidc'), get_string('cfg_logoutendpoint_desc', 'auth_voidc'),
-        'https://login.microsoftonline.com/organizations/oauth2/logout', PARAM_URL));
+        '', PARAM_URL));
 
     // Front channel logout URL.
     $settings->add(new auth_voidc_admin_setting_redirecturi('auth_voidc/logoutendpoint',

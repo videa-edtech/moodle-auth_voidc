@@ -20,7 +20,7 @@
  * @package auth_voidc
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
+ * @copyright (C) 2024 onwards Videa Edtech Ltd.
  */
 
 namespace auth_voidc;
@@ -53,18 +53,6 @@ class utils {
             $errmsg = 'Error response received.';
             self::debug($errmsg, __METHOD__, $result);
             if (isset($result['error_description'])) {
-                $isadminconsent = optional_param('admin_consent', false, PARAM_BOOL);
-                if ($isadminconsent) {
-                    if (get_config('auth_voidc', 'idptype') == AUTH_VOIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM &&
-                        auth_voidc_is_local_365_installed() &&
-                        $result['error'] === 'invalid_grant' &&
-                        isset($result['error_codes']) && count($result['error_codes']) == 1 &&
-                        $result['error_codes'][0] == 53003) {
-                        $localo365configurationpageurl = new moodle_url('/admin/settings.php', ['section' => 'local_o365']);
-                        throw new moodle_exception('settings_adminconsent_error_53003', 'local_o365',
-                            $localo365configurationpageurl, '', $result['error_description']);
-                    }
-                }
                 throw new moodle_exception('erroroidccall_message', 'auth_voidc', '', $result['error_description']);
             } else {
                 throw new moodle_exception('erroroidccall', 'auth_voidc');
@@ -186,7 +174,7 @@ class utils {
      * @return string The redirect URL.
      */
     public static function get_redirecturl() {
-        $redirecturl = new moodle_url('/auth/oidc/');
+        $redirecturl = new moodle_url('/auth/voidc/');
         return $redirecturl->out(false);
     }
 
@@ -196,52 +184,7 @@ class utils {
      * @return string The redirect URL.
      */
     public static function get_frontchannellogouturl() {
-        $logouturl = new moodle_url('/auth/oidc/logout.php');
+        $logouturl = new moodle_url('/auth/voidc/logout.php');
         return $logouturl->out(false);
-    }
-
-    /**
-     * Get and check existence of OIDC client certificate path.
-     *
-     * @return string|bool cert path if exists otherwise false
-     */
-    public static function get_certpath() {
-        $clientcertfile = get_config('auth_voidc', 'clientcertfile');
-        $certlocation = self::get_openssl_internal_path();
-        $certfile = "$certlocation/$clientcertfile";
-
-        if (is_file($certfile) && is_readable($certfile)) {
-            return "file://$certfile";
-        }
-
-        return false;
-    }
-
-    /**
-     * Get and check existence of OIDC client key path.
-     *
-     * @return string|bool key path if exists otherwise false
-     */
-    public static function get_keypath() {
-        $clientprivatekeyfile = get_config('auth_voidc', 'clientprivatekeyfile');
-        $keylocation = self::get_openssl_internal_path();
-        $keyfile = "$keylocation/$clientprivatekeyfile";
-
-        if (is_file($keyfile) && is_readable($keyfile)) {
-            return "file://$keyfile";
-        }
-
-        return false;
-    }
-
-    /**
-     * Get openssl cert base path, which is dataroot/microsoft_certs.
-     *
-     * @return string base path to put cert files
-     */
-    public static function get_openssl_internal_path() {
-        global $CFG;
-
-        return $CFG->dataroot . '/microsoft_certs';
     }
 }

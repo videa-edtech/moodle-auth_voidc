@@ -20,7 +20,7 @@
  * @package auth_voidc
  * @author Lai Wei <lai.wei@enovation.ie>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @copyright (C) 2021 onwards Microsoft, Inc. (http://microsoft.com/)
+ * @copyright (C) 2024 onwards Videa Edtech Ltd.
  */
 
 defined('MOODLE_INTERNAL') || die();

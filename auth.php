@@ -20,7 +20,7 @@
  * @package auth_voidc
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
+ * @copyright (C) 2024 onwards Videa Edtech Ltd.
  */
 
 defined('MOODLE_INTERNAL') || die();
@@ -31,9 +31,9 @@ require_once($CFG->dirroot.'/login/lib.php');
 /**
  * OpenID Connect Authentication Plugin.
  */
-class auth_plugin_oidc extends \auth_plugin_base {
+class auth_plugin_voidc extends \auth_plugin_base {
     /** @var string Authentication plugin type - the same as db field. */
-    public $authtype = 'oidc';
+    public $authtype = 'voidc';
 
     /** @var object Plugin config. */
     public $config;
@@ -259,7 +259,7 @@ class auth_plugin_oidc extends \auth_plugin_base {
      */
     public function user_authenticated_hook(&$user, $username, $password) {
         global $DB;
-        if (!empty($user) && !empty($user->auth) && $user->auth === 'oidc') {
+        if (!empty($user) && !empty($user->auth) && $user->auth === 'voidc') {
             $tokenrec = $DB->get_record('auth_voidc_token', ['userid' => $user->id]);
             if (!empty($tokenrec)) {
                 // If the token record username is out of sync (ie username changes), update it.
@@ -310,75 +310,63 @@ class auth_plugin_oidc extends \auth_plugin_base {
         if ($singlesignoutsetting) {
             $redirect = false;
 
-            if ($user->auth == 'oidc') {
+            if ($user->auth == 'voidc') {
                 $redirect = true;
-            } else if (auth_voidc_is_local_365_installed()) {
-                if ($DB->record_exists('local_o365_objects', ['type' => 'user', 'moodleid' => $user->id])) {
-                    $redirect = true;
-                }
             }
 
             if ($oidcservicesetting == 'keycloak') {
                 $redirect = false;
+
+                if ($user->auth == 'voidc') {
+                    $logoutUrl = get_config('auth_voidc', 'logouturi');
+                    $clientId = get_config('auth_voidc', 'clientid');
+                    $clientSecret = get_config('auth_voidc', 'clientsecret');
+
+                    $oidctoken = $DB->get_record('auth_voidc_token', ['username' => $user->username], '*', MUST_EXIST);
+
+                    // Data to send with the request.
+                    $postData = http_build_query([
+                        'client_id' => $clientId,
+                        'client_secret' => $clientSecret,
+                        'refresh_token' => $oidctoken->refreshtoken,
+                        'post_logout_redirect_uri' => get_login_url()
+                    ], '', '&');
+
+                    $curl = curl_init();
+
+                    curl_setopt_array($curl, array(
+                        CURLOPT_URL => $logoutUrl,
+                        CURLOPT_RETURNTRANSFER => true,
+                        CURLOPT_ENCODING => '',
+                        CURLOPT_MAXREDIRS => 10,
+                        CURLOPT_TIMEOUT => 0,
+                        CURLOPT_FOLLOWLOCATION => true,
+                        CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+                        CURLOPT_CUSTOMREQUEST => 'POST',
+                        CURLOPT_POSTFIELDS => $postData,
+                        CURLOPT_HTTPHEADER => array(
+                            'Content-Type: application/x-www-form-urlencoded'
+                        ),
+                    ));
+
+                    $response = curl_exec($curl);
+                    $httpCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+
+                    curl_close($curl);
+
+                    if ($httpCode == 204) {
+                        echo "OIDC: logout_success";
+                    } else {
+                        echo "OIDC: logout_failed";
+                        echo "OIDC_ERROR: " . $response;
+                    }
+                }
             }
 
             if ($redirect) {
                 $logouturl = get_config('auth_voidc', 'logouturi');
-                if (!$logouturl) {
-                    $logouturl = 'https://login.microsoftonline.com/common/oauth2/logout?post_logout_redirect_uri=' .
-                        urlencode($CFG->wwwroot);
-                } else {
-                    if (preg_match("/^https:\/\/login.microsoftonline.com\//", $logouturl) &&
-                        preg_match("/\/oauth2\/logout$/", $logouturl)) {
-                        $logouturl .= '?post_logout_redirect_uri=' . urlencode($CFG->wwwroot);
-                    }
-                }
-
-                redirect($logouturl);
-            }
-            if ($oidcservicesetting == 'keycloak' && $user->auth == 'oidc') {
-                $logoutUrl = get_config('auth_voidc', 'logouturi');
-                $clientId = get_config('auth_voidc', 'clientid');
-                $clientSecret = get_config('auth_voidc', 'clientsecret');
-
-                $oidctoken = $DB->get_record('auth_voidc_token', ['username' => $user->username], '*', MUST_EXIST);
-
-                // Data to send with the request
-                $postData = http_build_query([
-                    'client_id' => $clientId,
-                    'client_secret' => $clientSecret,
-                    'refresh_token' => $oidctoken->refreshtoken,
-                    'post_logout_redirect_uri' => get_login_url()
-                ], '', '&');
-
-                $curl = curl_init();
-
-                curl_setopt_array($curl, array(
-                    CURLOPT_URL => $logoutUrl,
-                    CURLOPT_RETURNTRANSFER => true,
-                    CURLOPT_ENCODING => '',
-                    CURLOPT_MAXREDIRS => 10,
-                    CURLOPT_TIMEOUT => 0,
-                    CURLOPT_FOLLOWLOCATION => true,
-                    CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-                    CURLOPT_CUSTOMREQUEST => 'POST',
-                    CURLOPT_POSTFIELDS => $postData,
-                    CURLOPT_HTTPHEADER => array(
-                        'Content-Type: application/x-www-form-urlencoded'
-                    ),
-                ));
-
-
-                $response = curl_exec($curl);
-                $httpCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
-
-                curl_close($curl);
-
-                if ($httpCode == 204) {
-                    echo "OIDC: logout_success";
-                } else {
-                    echo "OIDC: logout_failed";
-                    echo "OIDC_ERROR: " . $response;
+                if ($logouturl) {
+                    redirect($logouturl);
                 }
             }
         }

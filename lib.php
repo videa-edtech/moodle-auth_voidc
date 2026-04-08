@@ -21,65 +21,17 @@
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @author Lai Wei <lai.wei@enovation.ie>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
+ * @copyright (C) 2024 onwards Videa Edtech Ltd.
  */
 
 use auth_voidc\jwt;
 use auth_voidc\utils;
-
-// IdP types.
-/**
- * Microsoft Entra ID identity provider type.
- */
-const AUTH_VOIDC_IDP_TYPE_MICROSOFT_ENTRA_ID = 1;
-
-/**
- * Microsoft Identity Platform identity provider type.
- */
-const AUTH_VOIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM = 2;
-
-/**
- * Other identity provider type.
- */
-const AUTH_VOIDC_IDP_TYPE_OTHER = 3;
-
-// Microsoft Entra ID / Microsoft endpoint version.
-/**
- * Unknown Microsoft endpoint version.
- */
-const AUTH_VOIDC_MICROSOFT_ENDPOINT_VERSION_UNKNOWN = 0;
-
-/**
- * Microsoft endpoint version 1.
- */
-const AUTH_VOIDC_MICROSOFT_ENDPOINT_VERSION_1 = 1;
-
-/**
- * Microsoft endpoint version 2.
- */
-const AUTH_VOIDC_MICROSOFT_ENDPOINT_VERSION_2 = 2;
 
 // OIDC application authentication method.
 /**
  * OIDC application authentication method using secret.
  */
 const AUTH_VOIDC_AUTH_METHOD_SECRET = 1;
-
-/**
- * OIDC application authentication method using certificate.
- */
-const AUTH_VOIDC_AUTH_METHOD_CERTIFICATE = 2;
-
-// OIDC application auth certificate source.
-/**
- * OIDC application authentication certificate source from text.
- */
-const AUTH_VOIDC_AUTH_CERT_SOURCE_TEXT = 1;
-
-/**
- * OIDC application authentication certificate source from file.
- */
-const AUTH_VOIDC_AUTH_CERT_SOURCE_FILE = 2;
 
 /**
  * Initialize custom icon for OIDC authentication.
@@ -161,22 +113,6 @@ function auth_voidc_connectioncapability($userid, $mode = 'connect', $require = 
 }
 
 /**
- * Determine if local_o365 plugins is installed.
- *
- * @return bool
- */
-function auth_voidc_is_local_365_installed() {
-    global $CFG, $DB;
-
-    $dbmanager = $DB->get_manager();
-
-    return file_exists($CFG->dirroot . '/local/o365/version.php') &&
-        $DB->record_exists('config_plugins', ['plugin' => 'local_o365', 'name' => 'version']) &&
-        $dbmanager->table_exists('local_o365_objects') &&
-        $dbmanager->table_exists('local_o365_connections');
-}
-
-/**
  * Return details of all auth_voidc tokens having empty Moodle user IDs.
  *
  * @return array
@@ -251,25 +187,6 @@ function auth_voidc_get_tokens_with_mismatched_usernames() {
 function auth_voidc_delete_token(int $tokenid): void {
     global $DB;
 
-    if (auth_voidc_is_local_365_installed()) {
-        $sql = 'SELECT obj.id, obj.objectid, tok.token, u.id AS userid, u.email
-                  FROM {local_o365_objects} obj
-                  JOIN {auth_voidc_token} tok ON obj.o365name = tok.username
-                  JOIN {user} u ON obj.moodleid = u.id
-                 WHERE obj.type = :type AND tok.id = :tokenid';
-        if ($objectrecord = $DB->get_record_sql($sql, ['type' => 'user', 'tokenid' => $tokenid], IGNORE_MULTIPLE)) {
-            // Delete record from local_o365_objects.
-            $DB->delete_records('local_o365_objects', ['id' => $objectrecord->id]);
-
-            // Delete record from local_o365_token.
-            $DB->delete_records('local_o365_token', ['user_id' => $objectrecord->userid]);
-
-            // Delete record from local_o365_connections.
-            $DB->delete_records_select('local_o365_connections', 'muserid = :userid OR LOWER(entraidupn) = :email',
-                ['userid' => $objectrecord->userid, 'email' => $objectrecord->email]);
-        }
-    }
-
     $DB->delete_records('auth_voidc_token', ['id' => $tokenid]);
 }
 
@@ -279,75 +196,15 @@ function auth_voidc_delete_token(int $tokenid): void {
  * @return array
  */
 function auth_voidc_get_remote_fields() {
-    if (auth_voidc_is_local_365_installed()) {
-        $remotefields = [
-            '' => get_string('settings_fieldmap_feild_not_mapped', 'auth_voidc'),
-            'bindingusernameclaim' => get_string('settings_fieldmap_field_bindingusernameclaim', 'auth_voidc'),
-            'objectId' => get_string('settings_fieldmap_field_objectId', 'auth_voidc'),
-            'userPrincipalName' => get_string('settings_fieldmap_field_userPrincipalName', 'auth_voidc'),
-            'displayName' => get_string('settings_fieldmap_field_displayName', 'auth_voidc'),
-            'givenName' => get_string('settings_fieldmap_field_givenName', 'auth_voidc'),
-            'surname' => get_string('settings_fieldmap_field_surname', 'auth_voidc'),
-            'mail' => get_string('settings_fieldmap_field_mail', 'auth_voidc'),
-            'onPremisesSamAccountName' => get_string('settings_fieldmap_field_onPremisesSamAccountName', 'auth_voidc'),
-            'streetAddress' => get_string('settings_fieldmap_field_streetAddress', 'auth_voidc'),
-            'city' => get_string('settings_fieldmap_field_city', 'auth_voidc'),
-            'postalCode' => get_string('settings_fieldmap_field_postalCode', 'auth_voidc'),
-            'state' => get_string('settings_fieldmap_field_state', 'auth_voidc'),
-            'country' => get_string('settings_fieldmap_field_country', 'auth_voidc'),
-            'jobTitle' => get_string('settings_fieldmap_field_jobTitle', 'auth_voidc'),
-            'department' => get_string('settings_fieldmap_field_department', 'auth_voidc'),
-            'companyName' => get_string('settings_fieldmap_field_companyName', 'auth_voidc'),
-            'preferredLanguage' => get_string('settings_fieldmap_field_preferredLanguage', 'auth_voidc'),
-            'employeeId' => get_string('settings_fieldmap_field_employeeId', 'auth_voidc'),
-            'businessPhones' => get_string('settings_fieldmap_field_businessPhones', 'auth_voidc'),
-            'faxNumber' => get_string('settings_fieldmap_field_faxNumber', 'auth_voidc'),
-            'mobilePhone' => get_string('settings_fieldmap_field_mobilePhone', 'auth_voidc'),
-            'officeLocation' => get_string('settings_fieldmap_field_officeLocation', 'auth_voidc'),
-            'preferredName' => get_string('settings_fieldmap_field_preferredName', 'auth_voidc'),
-            'manager' => get_string('settings_fieldmap_field_manager', 'auth_voidc'),
-            'manager_email' => get_string('settings_fieldmap_field_manager_email', 'auth_voidc'),
-            'teams' => get_string('settings_fieldmap_field_teams', 'auth_voidc'),
-            'groups' => get_string('settings_fieldmap_field_groups', 'auth_voidc'),
-            'roles' => get_string('settings_fieldmap_field_roles', 'auth_voidc'),
-        ];
-
-        $order = 0;
-        while ($order++ < 15) {
-            $remotefields['extensionAttribute' . $order] = get_string('settings_fieldmap_field_extensionattribute', 'auth_voidc',
-                $order);
-        }
-
-        // SDS profile sync.
-        [$sdsprofilesyncenabled, $schoolid, $schoolname] = local_o365\feature\sds\utils::get_profile_sync_status_with_id_name();
-
-        if ($sdsprofilesyncenabled) {
-            $remotefields['sds_school_id'] = get_string('settings_fieldmap_field_sds_school_id', 'auth_voidc',
-                get_config('local_o365', 'sdsprofilesync', $schoolid));
-            $remotefields['sds_school_name'] = get_string('settings_fieldmap_field_sds_school_name', 'auth_voidc', $schoolname);
-            $remotefields['sds_school_role'] = get_string('settings_fieldmap_field_sds_school_role', 'auth_voidc');
-            $remotefields['sds_student_externalId'] = get_string('settings_fieldmap_field_sds_student_externalId', 'auth_voidc');
-            $remotefields['sds_student_birthDate'] = get_string('settings_fieldmap_field_sds_student_birthDate', 'auth_voidc');
-            $remotefields['sds_student_grade'] = get_string('settings_fieldmap_field_sds_student_grade', 'auth_voidc');
-            $remotefields['sds_student_graduationYear'] = get_string('settings_fieldmap_field_sds_student_graduationYear',
-                'auth_voidc');
-            $remotefields['sds_student_studentNumber'] = get_string('settings_fieldmap_field_sds_student_studentNumber',
-                'auth_voidc');
-            $remotefields['sds_teacher_externalId'] = get_string('settings_fieldmap_field_sds_teacher_externalId', 'auth_voidc');
-            $remotefields['sds_teacher_teacherNumber'] = get_string('settings_fieldmap_field_sds_teacher_teacherNumber',
-                'auth_voidc');
-        }
-    } else {
-        $remotefields = [
-            '' => get_string('settings_fieldmap_feild_not_mapped', 'auth_voidc'),
-            'bindingusernameclaim' => get_string('settings_fieldmap_field_bindingusernameclaim', 'auth_voidc'),
-            'objectId' => get_string('settings_fieldmap_field_objectId', 'auth_voidc'),
-            'userPrincipalName' => get_string('settings_fieldmap_field_userPrincipalName', 'auth_voidc'),
-            'givenName' => get_string('settings_fieldmap_field_givenName', 'auth_voidc'),
-            'surname' => get_string('settings_fieldmap_field_surname', 'auth_voidc'),
-            'mail' => get_string('settings_fieldmap_field_mail', 'auth_voidc'),
-        ];
-    }
+    $remotefields = [
+        '' => get_string('settings_fieldmap_feild_not_mapped', 'auth_voidc'),
+        'bindingusernameclaim' => get_string('settings_fieldmap_field_bindingusernameclaim', 'auth_voidc'),
+        'objectId' => get_string('settings_fieldmap_field_objectId', 'auth_voidc'),
+        'userPrincipalName' => get_string('settings_fieldmap_field_userPrincipalName', 'auth_voidc'),
+        'givenName' => get_string('settings_fieldmap_field_givenName', 'auth_voidc'),
+        'surname' => get_string('settings_fieldmap_field_surname', 'auth_voidc'),
+        'mail' => get_string('settings_fieldmap_field_mail', 'auth_voidc'),
+    ];
 
     return $remotefields;
 }
@@ -542,13 +399,8 @@ function auth_voidc_display_auth_lock_options($settings, $auth, $userfields, $he
         'locked' => get_string('locked', 'auth'),
     ];
 
-    if (auth_voidc_is_local_365_installed()) {
-        $alwaystext = get_string('update_oncreate_and_onlogin_and_usersync', 'auth_voidc');
-        $onlogintext = get_string('update_onlogin_and_usersync', 'auth_voidc');
-    } else {
-        $alwaystext = get_string('update_oncreate_and_onlogin', 'auth_voidc');
-        $onlogintext = get_string('update_onlogin', 'auth');
-    }
+    $alwaystext = get_string('update_oncreate_and_onlogin', 'auth_voidc');
+    $onlogintext = get_string('update_onlogin', 'auth');
     $updatelocaloptions = [
         'always' => $alwaystext,
         'oncreate' => get_string('update_oncreate', 'auth'),
@@ -645,26 +497,6 @@ function auth_voidc_get_all_user_fields() {
 }
 
 /**
- * Determine the endpoint version of the given Microsoft Entra ID / Microsoft authorization or token endpoint.
- *
- * @param string $endpoint The URL of the endpoint to be checked.
- * @return int The version of the Microsoft endpoint (1 or 2) or unknown.
- */
-function auth_voidc_determine_endpoint_version(string $endpoint) {
-    $endpointversion = AUTH_VOIDC_MICROSOFT_ENDPOINT_VERSION_UNKNOWN;
-
-    if (strpos($endpoint, 'https://login.microsoftonline.com/') === 0) {
-        if (strpos($endpoint, 'oauth2/v2.0/') !== false) {
-            $endpointversion = AUTH_VOIDC_MICROSOFT_ENDPOINT_VERSION_2;
-        } else if (strpos($endpoint, 'oauth2') !== false) {
-            $endpointversion = AUTH_VOIDC_MICROSOFT_ENDPOINT_VERSION_1;
-        }
-    }
-
-    return $endpointversion;
-}
-
-/**
  * Return formatted form element name to be used by configuration variables in custom forms.
  *
  * @param string $stringid
@@ -684,38 +516,14 @@ function auth_voidc_config_name_in_form(string $stringid) {
  */
 function auth_voidc_is_setup_complete() {
     $pluginconfig = get_config('auth_voidc');
-    if (empty($pluginconfig->clientid) || empty($pluginconfig->idptype) || empty($pluginconfig->clientauthmethod)) {
+    if (empty($pluginconfig->clientid) || empty($pluginconfig->clientauthmethod)) {
         return false;
     }
 
-    switch ($pluginconfig->clientauthmethod) {
-        case AUTH_VOIDC_AUTH_METHOD_SECRET:
-            if (empty($pluginconfig->clientsecret)) {
-                return false;
-            }
-            break;
-        case AUTH_VOIDC_AUTH_METHOD_CERTIFICATE:
-            if (!isset($pluginconfig->clientcertsource)) {
-                $existingclientcertsource = get_config('auth_voidc', 'clientcertsource');
-                if ($existingclientcertsource != AUTH_VOIDC_AUTH_CERT_SOURCE_TEXT) {
-                    add_to_config_log('clientcertsource', $existingclientcertsource, AUTH_VOIDC_AUTH_CERT_SOURCE_TEXT, 'auth_voidc');
-                }
-                set_config('clientcertsource', AUTH_VOIDC_AUTH_CERT_SOURCE_TEXT, 'auth_voidc');
-                $pluginconfig->clientcertsource = AUTH_VOIDC_AUTH_CERT_SOURCE_TEXT;
-            }
-            switch ($pluginconfig->clientcertsource) {
-                case AUTH_VOIDC_AUTH_CERT_SOURCE_FILE:
-                    if (!utils::get_certpath() || !utils::get_keypath()) {
-                        return false;
-                    }
-                    break;
-                case AUTH_VOIDC_AUTH_CERT_SOURCE_TEXT:
-                    if (empty($pluginconfig->clientcert) || empty($pluginconfig->clientprivatekey)) {
-                        return false;
-                    }
-                    break;
-            }
-            break;
+    if ($pluginconfig->clientauthmethod == AUTH_VOIDC_AUTH_METHOD_SECRET) {
+        if (empty($pluginconfig->clientsecret)) {
+            return false;
+        }
     }
 
     if (empty($pluginconfig->authendpoint) || empty($pluginconfig->tokenendpoint)) {
@@ -726,29 +534,6 @@ function auth_voidc_is_setup_complete() {
 }
 
 /**
- * Return the name of the configured IdP type.
- *
- * @return lang_string|string
- */
-function auth_voidc_get_idp_type_name() {
-    $idptypename = '';
-
-    switch (get_config('auth_voidc', 'idptype')) {
-        case AUTH_VOIDC_IDP_TYPE_MICROSOFT_ENTRA_ID:
-            $idptypename = get_string('idp_type_microsoft_entra_id', 'auth_voidc');
-            break;
-        case AUTH_VOIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM:
-            $idptypename = get_string('idp_type_microsoft_identity_platform', 'auth_voidc');
-            break;
-        case AUTH_VOIDC_IDP_TYPE_OTHER:
-            $idptypename = get_string('idp_type_other', 'auth_voidc');
-            break;
-    }
-
-    return $idptypename;
-}
-
-/**
  * Return the name of the configured authentication method.
  *
  * @return lang_string|string
@@ -756,13 +541,8 @@ function auth_voidc_get_idp_type_name() {
 function auth_voidc_get_client_auth_method_name() {
     $authmethodname = '';
 
-    switch (get_config('auth_voidc', 'clientauthmethod')) {
-        case AUTH_VOIDC_AUTH_METHOD_SECRET:
-            $authmethodname = get_string('auth_method_secret', 'auth_voidc');
-            break;
-        case AUTH_VOIDC_AUTH_METHOD_CERTIFICATE:
-            $authmethodname = get_string('auth_method_certificate', 'auth_voidc');
-            break;
+    if (get_config('auth_voidc', 'clientauthmethod') == AUTH_VOIDC_AUTH_METHOD_SECRET) {
+        $authmethodname = get_string('auth_method_secret', 'auth_voidc');
     }
 
     return $authmethodname;
@@ -827,18 +607,3 @@ function auth_voidc_get_existing_claims(): array {
     return $tokenclaims;
 }
 
-/**
- * Return if the user sync feature in local_o365 plugin is enabled.
- *
- * @return bool|void
- */
-function auth_voidc_is_user_sync_enabled() {
-    global $CFG;
-
-    if (auth_voidc_is_local_365_installed()) {
-        require_once($CFG->dirroot . '/local/o365/classes/feature/usersync/main.php');
-        return local_o365\feature\usersync\main::is_enabled();
-    }
-
-    return false;
-}

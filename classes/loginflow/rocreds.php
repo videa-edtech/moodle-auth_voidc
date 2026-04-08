@@ -20,7 +20,7 @@
  * @package auth_voidc
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
+ * @copyright (C) 2024 onwards Videa Edtech Ltd.
  */
 
 namespace auth_voidc\loginflow;
@@ -29,7 +29,7 @@ use auth_voidc\utils;
 
 defined('MOODLE_INTERNAL') || die();
 
-require_once($CFG->dirroot . '/auth/oidc/lib.php');
+require_once($CFG->dirroot . '/auth/voidc/lib.php');
 
 /**
  * Login flow for the oauth2 resource owner credentials grant.
@@ -43,20 +43,8 @@ class rocreds extends base {
      * @return string If there is an existing user object, return the username associated with it.
      *                If there is no existing user object, return the original username.
      */
-    protected function check_objects($o356username) {
-        global $DB;
-
-        $user = null;
-        if (auth_voidc_is_local_365_installed()) {
-            $sql = 'SELECT u.username
-                      FROM {local_o365_objects} obj
-                      JOIN {user} u ON u.id = obj.moodleid
-                     WHERE obj.o365name = ? and obj.type = ?';
-            $params = [$o356username, 'user'];
-            $user = $DB->get_record_sql($sql, $params);
-        }
-
-        return (!empty($user)) ? $user->username : $o356username;
+    protected function check_objects($username) {
+        return $username;
     }
 
     /**
@@ -78,7 +66,7 @@ class rocreds extends base {
 
         $username = $frm->username;
         $password = $frm->password;
-        $auth = 'oidc';
+        $auth = 'voidc';
 
         $username = $this->check_objects($username);
         if ($username !== $frm->username) {
@@ -175,16 +163,7 @@ class rocreds extends base {
             if (!empty($tokenrec)) {
                 $this->updatetoken($tokenrec->id, $authparams, $tokenparams);
             } else {
-                $originalupn = null;
-                if (auth_voidc_is_local_365_installed()) {
-                    $apiclient = \local_o365\utils::get_api();
-                    $userdetails = $apiclient->get_user($oidcuniqid);
-                    if (!is_null($userdetails) && isset($userdetails['userPrincipalName']) &&
-                        stripos($userdetails['userPrincipalName'], '#EXT#') !== false) {
-                        $originalupn = $userdetails['userPrincipalName'];
-                    }
-                }
-                $this->createtoken($oidcuniqid, $username, $authparams, $tokenparams, $idtoken, 0, $originalupn);
+                $this->createtoken($oidcuniqid, $username, $authparams, $tokenparams, $idtoken, 0);
             }
             return true;
         }

@@ -20,7 +20,7 @@
  * @package auth_voidc
  * @author Lai Wei <lai.wei@enovation.ie>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @copyright (C) 2023 onwards Microsoft, Inc. (http://microsoft.com/)
+ * @copyright (C) 2024 onwards Videa Edtech Ltd.
  */
 
 namespace auth_voidc;
@@ -33,7 +33,7 @@ use stdClass;
 
 defined('MOODLE_INTERNAL') || die();
 
-require_once($CFG->dirroot . '/auth/oidc/lib.php');
+require_once($CFG->dirroot . '/auth/voidc/lib.php');
 
 /**
  * Class process represents the process binding username claim tool.
@@ -201,7 +201,6 @@ class process {
         // All check passed, update the user record.
         $userupdated = false;
         $authoidctokenupdated = false;
-        $localo365objectupdated = false;
 
         // Step 1: Update the user object, if route is auth_voidc rename.
         if ($route == self::ROUTE_AUTH_VOIDC_RENAME) {
@@ -238,27 +237,6 @@ class process {
             }
         }
 
-        // Step 3: Update connection record in local_o365_object table.
-        if (auth_voidc_is_local_365_installed()) {
-            if ($route == static::ROUTE_AUTH_VOIDC_RENAME) {
-                if ($connectionrecord = $DB->get_record('local_o365_objects', ['type' => 'user', 'moodleid' => $user->id])) {
-                    $connectionrecord->o365name = $newusername;
-                    $DB->update_record('local_o365_objects', $connectionrecord);
-                    $localo365objectupdated = true;
-                }
-            } else {
-                $sql = "SELECT *
-                          FROM {local_o365_objects}
-                         WHERE type = 'user'
-                           AND lower(o365name) = ?";
-                if ($connectionrecord = $DB->get_record_sql($sql, [$lcusername])) {
-                    $connectionrecord->o365name = $newusername;
-                    $DB->update_record('local_o365_objects', $connectionrecord);
-                    $localo365objectupdated = true;
-                }
-            }
-        }
-
         if ($userupdated) {
             $this->upt->track('status', get_string('update_success_username', 'auth_voidc'));
         }
@@ -267,11 +245,7 @@ class process {
             $this->upt->track('status', get_string('update_success_token', 'auth_voidc'));
         }
 
-        if ($localo365objectupdated) {
-            $this->upt->track('status', get_string('update_success_o365', 'auth_voidc'));
-        }
-
-        if ($userupdated || $authoidctokenupdated || $localo365objectupdated) {
+        if ($userupdated || $authoidctokenupdated) {
             // At least one of the records has been updated.
             $this->usersupdated++;
         } else {

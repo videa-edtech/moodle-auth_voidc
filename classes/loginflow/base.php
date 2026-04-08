@@ -21,7 +21,7 @@
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @author Lai Wei <lai.wei@enovation.ie>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
+ * @copyright (C) 2024 onwards Videa Edtech Ltd.
  */
 
 namespace auth_voidc\loginflow;
@@ -35,7 +35,7 @@ use stdClass;
 
 defined('MOODLE_INTERNAL') || die();
 
-require_once($CFG->dirroot . '/auth/oidc/lib.php');
+require_once($CFG->dirroot . '/auth/voidc/lib.php');
 
 /**
  * A base loginflow class.
@@ -121,109 +121,7 @@ class base {
 
         $fieldmappingfromtoken = true;
 
-        if (auth_voidc_is_local_365_installed()) {
-            // Check if multi tenants is enabled. User from additional tenants can only sync fields from token.
-            $userfromadditionaltenant = false;
-            $hostingtenantid = get_config('local_o365', 'entratenantid');
-            $token = jwt::instance_from_encoded($tokenrec->token);
-            if ($token->claim('tid') != $hostingtenantid) {
-                $userfromadditionaltenant = true;
-            }
-
-            if (!$userfromadditionaltenant) {
-                $userdatafetchedfromgraph = false;
-                if (\local_o365\feature\usersync\main::fieldmap_require_graph_api_call($eventtype)) {
-                    // If local_o365 is installed, and connects to Microsoft Identity Platform (v2.0),
-                    // or field mapping uses fields not covered by token, then call Graph API function to get user details.
-                    $apiclient = \local_o365\utils::get_api();
-                    if ($apiclient) {
-                        $fieldmappingfromtoken = false;
-                        $userdata = $apiclient->get_user($tokenrec->oidcuniqid);
-                        if ($userdata) {
-                            $userdatafetchedfromgraph = true;
-                        }
-                    }
-                }
-
-                if (!$userdatafetchedfromgraph) {
-                    // If local_o365 is installed, but all field mapping fields are in token, then use token.
-                    $fieldmappingfromtoken = false;
-                    // Process both ID token and access tokens.
-                    $tokenames = ['idtoken', 'token'];
-
-                    foreach ($tokenames as $tokename) {
-                        $token = jwt::instance_from_encoded($tokenrec->$tokename);
-
-                        if (!isset($userdata['objectId'])) {
-                            $objectid = $token->claim('oid');
-                            if (!empty($objectid)) {
-                                $userdata['objectId'] = $objectid;
-                            }
-                        }
-
-                        if (!isset($userdata['userPrincipalName'])) {
-                            if (get_config('auth_voidc', 'idptype') == AUTH_VOIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM) {
-                                $upn = $token->claim('preferred_username');
-                                if (empty($upn)) {
-                                    $upn = $token->claim('email');
-                                }
-                            } else {
-                                $upn = $token->claim('upn');
-                                if (empty($upn)) {
-                                    $upn = $token->claim('unique_name');
-                                }
-                            }
-
-                            if (!empty($upn)) {
-                                $userdata['userPrincipalName'] = $upn;
-                            }
-                        }
-
-                        if (!isset($userdata['givenName'])) {
-                            $firstname = $token->claim('given_name');
-                            if (!empty($firstname)) {
-                                $userdata['givenName'] = $firstname;
-                            }
-                        }
-
-                        if (!isset($userdata['surname'])) {
-                            $lastname = $token->claim('family_name');
-                            if (!empty($lastname)) {
-                                $userdata['surname'] = $lastname;
-                            }
-                        }
-
-                        if (!isset($userdata['mail'])) {
-                            $email = $token->claim('email');
-                            if (!empty($email)) {
-                                $userdata['mail'] = $email;
-                            } else {
-                                if (!empty($upn)) {
-                                    $entraidemailvalidateresult = filter_var($upn, FILTER_VALIDATE_EMAIL);
-                                    if (!empty($entraidemailvalidateresult)) {
-                                        $userdata['mail'] = $entraidemailvalidateresult;
-                                    }
-                                }
-                            }
-                        }
-
-                        if (!isset($userdata['bindingusernameclaim'])) {
-                            $bindingusernameclaim = auth_voidc_get_binding_username_claim();
-                            if (!empty($bindingusernameclaim)) {
-                                $userdata['bindingusernameclaim'] = $token->claim($bindingusernameclaim);
-                            }
-                        }
-                    }
-                }
-
-                // Call the function in local_o365 to map fields.
-                $updateduser = \local_o365\feature\usersync\main::apply_configured_fieldmap($userdata, $originaluser, $eventtype);
-                $userinfo = (array)$updateduser;
-            }
-        }
-
         if ($fieldmappingfromtoken) {
-            // If local_o365 is not installed, use information from user token.
             $userdata = [];
 
             // Process both ID token and access tokens.
@@ -238,27 +136,16 @@ class base {
                 }
 
                 if (!isset($userdata['objectId'])) {
-                    // Use 'oid' if available (Microsoft-specific), or fall back to standard "sub" claim.
-                    $objectid = $token->claim('oid');
-                    if (empty($objectid)) {
-                        $objectid = $token->claim('sub');
-                    }
+                    $objectid = $token->claim('sub');
                     if (!empty($objectid)) {
                         $userdata['objectId'] = $objectid;
                     }
                 }
 
                 if (!isset($userdata['userPrincipalName'])) {
-                    if (get_config('auth_voidc', 'idptype') == AUTH_VOIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM) {
-                        $upn = $token->claim('preferred_username');
-                        if (empty($upn)) {
-                            $upn = $token->claim('email');
-                        }
-                    } else {
-                        $upn = $token->claim('upn');
-                        if (empty($upn)) {
-                            $upn = $token->claim('unique_name');
-                        }
+                    $upn = $token->claim('preferred_username');
+                    if (empty($upn)) {
+                        $upn = $token->claim('email');
                     }
 
                     if (!empty($upn)) {
@@ -361,10 +248,10 @@ class base {
             ?\moodle_url $selfurl = null, $userid = null) {
         global $USER, $DB, $CFG;
         if ($redirect === null) {
-            $redirect = new \moodle_url('/auth/oidc/ucp.php');
+            $redirect = new \moodle_url('/auth/voidc/ucp.php');
         }
         if ($selfurl === null) {
-            $selfurl = new \moodle_url('/auth/oidc/ucp.php', ['action' => 'disconnectlogin']);
+            $selfurl = new \moodle_url('/auth/voidc/ucp.php', ['action' => 'disconnectlogin']);
         }
 
         // Get the record of the user involved. Current user if no ID received.
@@ -531,7 +418,7 @@ class base {
         $clientid = (isset($this->config->clientid)) ? $this->config->clientid : null;
         $clientsecret = (isset($this->config->clientsecret)) ? $this->config->clientsecret : null;
         $redirecturi = (!empty($CFG->loginhttps)) ? str_replace('http://', 'https://', $CFG->wwwroot) : $CFG->wwwroot;
-        $redirecturi .= '/auth/oidc/';
+        $redirecturi .= '/auth/voidc/';
         $tokenresource = (isset($this->config->oidcresource)) ? $this->config->oidcresource : null;
         $scope = (isset($this->config->oidcscope)) ? $this->config->oidcscope : null;
 
@@ -564,11 +451,7 @@ class base {
             throw new moodle_exception('errorauthinvalididtoken', 'auth_voidc');
         }
 
-        // Use 'oid' if available (Microsoft-specific), or fall back to standard "sub" claim.
-        $oidcuniqid = $idtoken->claim('oid');
-        if (empty($oidcuniqid)) {
-            $oidcuniqid = $idtoken->claim('sub');
-        }
+        $oidcuniqid = $idtoken->claim('sub');
         return [$oidcuniqid, $idtoken];
     }
 
@@ -742,34 +625,17 @@ class base {
                 $bindingusernameclaim = get_config('auth_voidc', 'custombindingclaim');
             case 'preferred_username':
             case 'email':
-            case 'upn':
-            case 'unique_name':
             case 'sub':
-            case 'oid':
-            case 'samaccountname':
                 $oidcusername = $idtoken->claim($bindingusernameclaim);
                 break;
             case 'auto':
-                if (get_config('auth_voidc', 'idptype') == AUTH_VOIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM) {
-                    $oidcusername = $idtoken->claim('preferred_username');
-                    if (empty($oidcusername)) {
-                        $oidcusername = $idtoken->claim('email');
-                    }
-                } else {
-                    $oidcusername = $idtoken->claim('upn');
-                    if (empty($oidcusername)) {
-                        $oidcusername = $idtoken->claim('unique_name');
-                    }
-                }
-
+                $oidcusername = $idtoken->claim('preferred_username');
                 if (empty($oidcusername)) {
-                    $oidcusername = $idtoken->claim('oid'); // Azure-specific.
+                    $oidcusername = $idtoken->claim('email');
                 }
-
                 if (empty($oidcusername)) {
                     $oidcusername = $idtoken->claim('sub');
                 }
-
                 break;
             default:
                 $oidcusername = '';

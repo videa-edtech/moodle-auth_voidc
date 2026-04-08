@@ -20,7 +20,7 @@
  * @package auth_voidc
  * @author James McQuillan <james.mcquillan@remote-learner.net>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @copyright (C) 2014 onwards Microsoft, Inc. (http://microsoft.com/)
+ * @copyright (C) 2024 onwards Videa Edtech Ltd.
  */
 
 namespace auth_voidc;
@@ -30,7 +30,7 @@ use moodle_url;
 
 defined('MOODLE_INTERNAL') || die();
 
-require_once($CFG->dirroot . '/auth/oidc/lib.php');
+require_once($CFG->dirroot . '/auth/voidc/lib.php');
 
 /**
  * OpenID Connect Client
@@ -79,20 +79,7 @@ class oidcclient {
         $this->clientid = $id;
         $this->clientsecret = $secret;
         $this->redirecturi = $redirecturi;
-        if (!empty($tokenresource)) {
-            $this->tokenresource = $tokenresource;
-        } else {
-            if (auth_voidc_is_local_365_installed()) {
-                if (\local_o365\rest\o365api::use_chinese_api() === true) {
-                    $this->tokenresource = 'https://microsoftgraph.chinacloudapi.cn';
-                } else {
-                    $this->tokenresource = 'https://graph.microsoft.com';
-                }
-            } else {
-                $this->tokenresource = 'https://graph.microsoft.com';
-            }
-
-        }
+        $this->tokenresource = !empty($tokenresource) ? $tokenresource : '';
         $this->scope = (!empty($scope)) ? $scope : 'openid profile email';
     }
 
@@ -190,10 +177,6 @@ class oidcclient {
             'redirect_uri' => $this->redirecturi,
         ];
 
-        if (get_config('auth_voidc', 'idptype') != AUTH_VOIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM) {
-            $params['resource'] = $this->tokenresource;
-        }
-
         if ($promptlogin === true) {
             $params['prompt'] = 'login';
         } else if ($selectaccount === true) {
@@ -210,28 +193,6 @@ class oidcclient {
         if (!empty($domainhint)) {
             $params['domain_hint'] = $domainhint;
         }
-
-        $params = array_merge($params, $extraparams);
-
-        return $params;
-    }
-
-    /**
-     * Return params for an admin consent request.
-     *
-     * @param array $stateparams
-     * @param array $extraparams
-     * @return array
-     */
-    protected function getadminconsentrequestparams(array $stateparams = [], array $extraparams = []) {
-        $nonce = 'N'.uniqid();
-
-        $params = [
-            'client_id' => $this->clientid,
-            'scope' => 'https://graph.microsoft.com/.default',
-            'state' => $this->getnewstate($nonce, $stateparams),
-            'redirect_uri' => $this->redirecturi,
-        ];
 
         $params = array_merge($params, $extraparams);
 
@@ -281,20 +242,6 @@ class oidcclient {
     }
 
     /**
-     * Perform an admin consent request when using a Microsoft Identity Platform type IdP.
-     *
-     * @param array $stateparams
-     * @param array $extraparams
-     * @return void
-     */
-    public function adminconsentrequest(array $stateparams = [], array $extraparams = []) {
-        $adminconsentendpoint = 'https://login.microsoftonline.com/organizations/v2.0/adminconsent';
-        $params = $this->getadminconsentrequestparams($stateparams, $extraparams);
-        $redirecturl = new moodle_url($adminconsentendpoint, $params);
-        redirect($redirecturl);
-    }
-
-    /**
      * Make a token request using the resource-owner credentials login flow.
      *
      * @param string $username The resource owner's username.
@@ -318,10 +265,6 @@ class oidcclient {
             'client_id' => $this->clientid,
             'client_secret' => $this->clientsecret,
         ];
-
-        if (get_config('auth_voidc', 'idptype') != AUTH_VOIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM) {
-            $params['resource'] = $this->tokenresource;
-        }
 
         try {
             $returned = $this->httpclient->post($this->endpoints['token'], $params);
@@ -350,86 +293,9 @@ class oidcclient {
             'redirect_uri' => $this->redirecturi,
         ];
 
-        switch (get_config('auth_voidc', 'clientauthmethod')) {
-            case AUTH_VOIDC_AUTH_METHOD_CERTIFICATE:
-                $params['client_assertion_type'] = 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer';
-                $params['client_assertion'] = static::generate_client_assertion();
-                $params['tenant'] = 'common';
-                break;
-            default:
-                $params['client_secret'] = $this->clientsecret;
-        }
+        $params['client_secret'] = $this->clientsecret;
         $returned = $this->httpclient->post($this->endpoints['token'], $params);
         return utils::process_json_response($returned, ['id_token' => null]);
     }
 
-    /**
-     * Request an access token in Microsoft Identity Platform.
-     *
-     * @return array
-     */
-    public function app_access_token_request() {
-        $params = [
-            'client_id' => $this->clientid,
-            'scope' => 'https://graph.microsoft.com/.default',
-            'grant_type' => 'client_credentials',
-        ];
-
-        switch (get_config('auth_voidc', 'clientauthmethod')) {
-            case AUTH_VOIDC_AUTH_METHOD_CERTIFICATE:
-                $params['client_assertion_type'] = 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer';
-                $params['client_assertion'] = static::generate_client_assertion();
-                break;
-            default:
-                $params['client_secret'] = $this->clientsecret;
-        }
-
-        $tokenendpoint = $this->endpoints['token'];
-
-        $returned = $this->httpclient->post($tokenendpoint, $params);
-        return utils::process_json_response($returned, ['access_token' => null]);
-    }
-
-    /**
-     * Calculate the return the assertion used in the token request in certificate connection method.
-     *
-     * @return string
-     * @throws moodle_exception
-     */
-    public static function generate_client_assertion(): string {
-        $authoidcconfig = get_config('auth_voidc');
-        $certsource = $authoidcconfig->clientcertsource;
-
-        $clientcertpassphrase = null;
-        if (property_exists($authoidcconfig, 'clientcertpassphrase')) {
-            $clientcertpassphrase = $authoidcconfig->clientcertpassphrase;
-        }
-
-        if ($certsource == AUTH_VOIDC_AUTH_CERT_SOURCE_TEXT) {
-            $cert = openssl_x509_read($authoidcconfig->clientcert);
-            $privatekey = openssl_pkey_get_private($authoidcconfig->clientprivatekey, $clientcertpassphrase);
-        } else if ($certsource == AUTH_VOIDC_AUTH_CERT_SOURCE_FILE) {
-            $cert = openssl_x509_read(utils::get_certpath());
-            $privatekey = openssl_pkey_get_private(utils::get_keypath(), $clientcertpassphrase);
-        } else {
-            throw new moodle_exception('errorinvalidcertificatesource', 'auth_voidc');
-        }
-
-        $sh1hash = openssl_x509_fingerprint($cert);
-        $x5t = base64_encode(hex2bin($sh1hash));
-
-        $jwt = new jwt();
-        $jwt->set_header(['alg' => 'RS256', 'typ' => 'JWT', 'x5t' => $x5t]);
-        $jwt->set_claims([
-            'aud' => $authoidcconfig->tokenendpoint,
-            'exp' => strtotime('+10min'),
-            'iss' => $authoidcconfig->clientid,
-            'jti' => bin2hex(openssl_random_pseudo_bytes(16)),
-            'nbf' => time(),
-            'sub' => $authoidcconfig->clientid,
-            'iat' => time(),
-        ]);
-
-        return $jwt->assert_token($privatekey);
-    }
 }

@@ -20,7 +20,7 @@
  * @package auth_voidc
  * @author Lai Wei <lai.wei@enovation.ie>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @copyright (C) 2022 onwards Microsoft, Inc. (http://microsoft.com/)
+ * @copyright (C) 2024 onwards Videa Edtech Ltd.
  */
 
 namespace auth_voidc\form;
@@ -30,7 +30,7 @@ use moodleform;
 
 defined('MOODLE_INTERNAL') || die();
 
-require_once($CFG->dirroot . '/auth/oidc/lib.php');
+require_once($CFG->dirroot . '/auth/voidc/lib.php');
 
 /**
  * Class bindingusernameclaim represents the form on the binding username claim configuration page.
@@ -63,55 +63,15 @@ class binding_username_claim extends moodleform {
         $mform =& $this->_form;
 
         // Binding username claim.
-        $idptype = get_config('auth_voidc', 'idptype');
-        $bindingusernameoptions = [];
-        switch ($idptype) {
-            case AUTH_VOIDC_IDP_TYPE_OTHER:
-                $this->optionset = self::OPTION_SET_NON_MS_IDP;
-                $descriptionidentifier = 'binding_username_claim_help_non_ms';
-                $bindingusernameoptions = [
-                    'auto' => get_string('binding_username_auto', 'auth_voidc'), // Use default logic.
-                    'preferred_username' => 'preferred_username',
-                    'email' => 'email',
-                    'unique_name' => 'unique_name',
-                    'sub' => 'sub',
-                    'samaccountname' => 'samaccountname',
-                    'custom' => get_string('binding_username_custom', 'auth_voidc'), // Custom value.
-                ];
-                break;
-            case AUTH_VOIDC_IDP_TYPE_MICROSOFT_IDENTITY_PLATFORM:
-            case AUTH_VOIDC_IDP_TYPE_MICROSOFT_ENTRA_ID:
-                if (auth_voidc_is_local_365_installed() && auth_voidc_is_user_sync_enabled()) {
-                    $this->optionset = self::OPTION_SET_MS_WITH_USER_SYNC;
-                    $descriptionidentifier = 'binding_username_claim_help_ms_with_user_sync';
-                    $bindingusernameoptions = [
-                        'auto' => get_string('binding_username_auto', 'auth_voidc'), // Use default logic.
-                        'email' => 'email',
-                        'upn' => 'upn',
-                        'oid' => 'oid',
-                        'samaccountname' => 'samaccountname',
-                    ];
-                } else {
-                    $this->optionset = self::OPTION_SET_MS_NO_USER_SYNC;
-                    $descriptionidentifier = 'binding_username_claim_help_ms_no_user_sync';
-                    $bindingusernameoptions = [
-                        'auto' => get_string('binding_username_auto', 'auth_voidc'), // Use default logic.
-                        'preferred_username' => 'preferred_username',
-                        'email' => 'email',
-                        'upn' => 'upn',
-                        'unique_name' => 'unique_name',
-                        'oid' => 'oid',
-                        'sub' => 'sub',
-                        'samaccountname' => 'samaccountname',
-                        'custom' => get_string('binding_username_custom', 'auth_voidc'), // Custom value.
-                    ];
-                }
-                break;
-        }
-
-        if (empty($bindingusernameoptions)) {
-            throw new moodle_exception('missing_idp_type', 'auth_voidc');
-        }
+        $this->optionset = self::OPTION_SET_NON_MS_IDP;
+        $descriptionidentifier = 'binding_username_claim_help_non_ms';
+        $bindingusernameoptions = [
+            'auto'               => get_string('binding_username_auto', 'auth_voidc'),
+            'preferred_username' => 'preferred_username',
+            'email'              => 'email',
+            'sub'                => 'sub',
+            'custom'             => get_string('binding_username_custom', 'auth_voidc'),
+        ];
 
         $mform->addElement(
                 'select',
