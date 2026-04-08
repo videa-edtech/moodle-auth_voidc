@@ -28,7 +28,7 @@ use auth_voidc\form\change_binding_username_claim_tool_form2;
 use auth_voidc\preview;
 use auth_voidc\process;
 
-require_once(dirname(__FILE__) . '/../../config.php');
+require_once(__DIR__ . '/../../config.php');
 require_once($CFG->libdir . '/adminlib.php');
 require_once($CFG->libdir . '/csvlib.class.php');
 

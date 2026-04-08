@@ -25,7 +25,7 @@
 
 use auth_voidc\form\binding_username_claim;
 
-require_once(dirname(__FILE__) . '/../../config.php');
+require_once(__DIR__ . '/../../config.php');
 require_once($CFG->libdir . '/adminlib.php');
 require_once($CFG->dirroot . '/auth/voidc/lib.php');
 

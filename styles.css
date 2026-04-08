@@ -47,3 +47,79 @@
     font-family: 'Courier New', Courier, monospace;
     white-space: pre;
 }
+
+/* Client list (manageapplication.php). */
+.voidc-client-list {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 0.5rem;
+}
+
+.voidc-client-list th,
+.voidc-client-list td {
+    padding: 0.6rem 0.75rem;
+    border-bottom: 1px solid #e5e5e5;
+    vertical-align: middle;
+}
+
+.voidc-client-list thead th {
+    text-align: left;
+    font-weight: 600;
+    background: #f8f9fa;
+    border-bottom: 2px solid #dee2e6;
+}
+
+.voidc-client-list tbody tr:hover {
+    background: #fafbfc;
+}
+
+.voidc-client-list .voidc-client-icon {
+    width: 32px;
+    text-align: center;
+}
+
+.voidc-client-list .voidc-client-icon img,
+.voidc-client-list .voidc-client-icon i {
+    width: 24px;
+    height: 24px;
+}
+
+.voidc-client-list .voidc-client-status {
+    display: inline-block;
+    padding: 0.15rem 0.55rem;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.voidc-client-list .voidc-client-status.enabled {
+    background: #e6f4ea;
+    color: #137333;
+}
+
+.voidc-client-list .voidc-client-status.disabled {
+    background: #fce8e6;
+    color: #b3261e;
+}
+
+.voidc-client-list .voidc-client-actions {
+    white-space: nowrap;
+    text-align: right;
+}
+
+.voidc-client-list .voidc-client-actions a {
+    margin-left: 0.4rem;
+}
+
+.voidc-client-list .voidc-client-empty td {
+    text-align: center;
+    color: #6c757d;
+    padding: 2rem 1rem;
+}
+
+.voidc-client-toolbar {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 0.5rem;
+}
+

@@ -403,5 +403,25 @@ function xmldb_auth_voidc_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2026040800, 'auth', 'voidc');
     }
 
+    if ($oldversion < 2026040900) {
+        // Per-client binding username claim.
+        $table = new xmldb_table('auth_voidc_clients');
+
+        $field = new xmldb_field('bindingusernameclaim', XMLDB_TYPE_CHAR, '64', null, XMLDB_NOTNULL, null, 'auto',
+            'oidcscope');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        $field = new xmldb_field('customclaimname', XMLDB_TYPE_CHAR, '128', null, null, null, null,
+            'bindingusernameclaim');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Voidc savepoint reached.
+        upgrade_plugin_savepoint(true, 2026040900, 'auth', 'voidc');
+    }
+
     return true;
 }

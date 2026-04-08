@@ -47,13 +47,13 @@ class base {
     /** @var \auth_voidc\httpclientinterface An HTTP client to use. */
     protected $httpclient;
 
+    /** @var \stdClass|null The auth_voidc_clients row this flow is currently acting on. */
+    protected $clientrecord = null;
+
     /**
      * Constructor.
      */
     public function __construct() {
-        $default = [
-                'opname' => get_string('pluginname', 'auth_voidc'),
-        ];
         $storedconfig = (array)get_config('auth_voidc');
 
         foreach ($storedconfig as $configname => $configvalue) {
@@ -62,7 +62,28 @@ class base {
             }
         }
 
-        $this->config = (object)array_merge($default, $storedconfig);
+        $this->config = (object)$storedconfig;
+    }
+
+    /**
+     * Set the auth_voidc_clients record this flow is acting on.
+     *
+     * Every code path that needs OIDC credentials must set this before calling
+     * get_oidcclient(). There is no implicit fallback.
+     *
+     * @param \stdClass $clientrecord
+     */
+    public function set_clientrecord(\stdClass $clientrecord): void {
+        $this->clientrecord = $clientrecord;
+    }
+
+    /**
+     * Return the current client record, or null if none has been set.
+     *
+     * @return \stdClass|null
+     */
+    public function get_clientrecord(): ?\stdClass {
+        return $this->clientrecord;
     }
 
     /**
@@ -182,7 +203,12 @@ class base {
                 }
 
                 if (!isset($userdata['bindingusernameclaim'])) {
-                    $bindingusernameclaim = auth_voidc_get_binding_username_claim();
+                    // Prefer the client record attached to the token, so the right IdP's
+                    // binding claim is used when multiple clients are configured.
+                    $clientforclaim = !empty($tokenrec->clientid)
+                        ? auth_voidc_get_client((int) $tokenrec->clientid)
+                        : null;
+                    $bindingusernameclaim = auth_voidc_get_binding_username_claim($clientforclaim);
                     if (!empty($bindingusernameclaim)) {
                         $userdata['bindingusernameclaim'] = $token->claim($bindingusernameclaim);
                     }
@@ -279,7 +305,7 @@ class base {
             $PAGE->set_pagelayout('standard');
             $USER->editing = false;
 
-            $ucptitle = get_string('ucp_disconnect_title', 'auth_voidc', $this->config->opname);
+            $ucptitle = get_string('ucp_disconnect_title', 'auth_voidc', get_string('pluginname', 'auth_voidc'));
             $PAGE->navbar->add($ucptitle, $PAGE->url);
             $PAGE->set_title($ucptitle);
 
@@ -411,21 +437,20 @@ class base {
             $this->httpclient = new \auth_voidc\httpclient();
         }
 
-        if (!auth_voidc_is_setup_complete()) {
-            throw new moodle_exception('errorauthnocredsandendpoints', 'auth_voidc');
+        if (empty($this->clientrecord)) {
+            throw new moodle_exception('errornoclientrecord', 'auth_voidc');
         }
 
-        $clientid = (isset($this->config->clientid)) ? $this->config->clientid : null;
-        $clientsecret = (isset($this->config->clientsecret)) ? $this->config->clientsecret : null;
+        $rec = $this->clientrecord;
+
         $redirecturi = (!empty($CFG->loginhttps)) ? str_replace('http://', 'https://', $CFG->wwwroot) : $CFG->wwwroot;
         $redirecturi .= '/auth/voidc/';
-        $tokenresource = (isset($this->config->oidcresource)) ? $this->config->oidcresource : null;
-        $scope = (isset($this->config->oidcscope)) ? $this->config->oidcscope : null;
 
         $client = new oidcclient($this->httpclient);
-        $client->setcreds($clientid, $clientsecret, $redirecturi, $tokenresource, $scope);
-
-        $client->setendpoints(['auth' => $this->config->authendpoint, 'token' => $this->config->tokenendpoint]);
+        $client->setcreds($rec->clientid, $rec->clientsecret, $redirecturi, $rec->oidcresource ?? '',
+            $rec->oidcscope ?? '');
+        $client->setendpoints(['auth' => $rec->authendpoint, 'token' => $rec->tokenendpoint]);
+        $client->set_clientrecordid((int) $rec->id);
 
         return $client;
     }
@@ -552,14 +577,23 @@ class base {
             }
         }
 
+        if (empty($this->clientrecord)) {
+            throw new moodle_exception('errornoclientrecord', 'auth_voidc');
+        }
+
         $tokenrec = new stdClass;
         $tokenrec->oidcuniqid = $oidcuniqid;
         $tokenrec->username = $username;
         $tokenrec->userid = $userid;
         $tokenrec->oidcusername = $oidcusername;
         $tokenrec->useridentifier = $useridentifier;
-        $tokenrec->tokenresource = !empty($tokenparams['resource']) ? $tokenparams['resource'] : ($this->config->oidcresource ?? '');
-        $tokenrec->scope = !empty($tokenparams['scope']) ? $tokenparams['scope'] : $this->config->oidcscope;
+        $tokenrec->tokenresource = !empty($tokenparams['resource'])
+            ? $tokenparams['resource']
+            : ($this->clientrecord->oidcresource ?? '');
+        $tokenrec->scope = !empty($tokenparams['scope'])
+            ? $tokenparams['scope']
+            : ($this->clientrecord->oidcscope ?? 'openid profile email');
+        $tokenrec->clientid = (int) $this->clientrecord->id;
         $tokenrec->authcode = $authparams['code'];
         $tokenrec->token = $tokenparams['access_token'];
         if (!empty($tokenparams['expires_on'])) {
@@ -612,35 +646,26 @@ class base {
             return '';
         }
 
+        // Explicit override wins (e.g. createtoken passes 'auto' to force fallback behaviour).
+        // Otherwise prefer the current client's configured claim, falling back to the global
+        // setting only when no client record is set (e.g. background maintenance contexts).
         if (empty($bindingusernameclaim)) {
-            $bindingusernameclaim = get_config('auth_voidc', 'bindingusernameclaim');
-            if (empty($bindingusernameclaim)) {
-                $bindingusernameclaim = 'auto';
-                set_config('bindingusernameclaim', $bindingusernameclaim, 'auth_voidc');
+            $bindingusernameclaim = auth_voidc_get_binding_username_claim($this->clientrecord);
+        }
+
+        if ($bindingusernameclaim === 'auto') {
+            $oidcusername = $idtoken->claim('preferred_username');
+            if (empty($oidcusername)) {
+                $oidcusername = $idtoken->claim('email');
             }
+            if (empty($oidcusername)) {
+                $oidcusername = $idtoken->claim('sub');
+            }
+            return $oidcusername;
         }
 
-        switch ($bindingusernameclaim) {
-            case 'custom':
-                $bindingusernameclaim = get_config('auth_voidc', 'custombindingclaim');
-            case 'preferred_username':
-            case 'email':
-            case 'sub':
-                $oidcusername = $idtoken->claim($bindingusernameclaim);
-                break;
-            case 'auto':
-                $oidcusername = $idtoken->claim('preferred_username');
-                if (empty($oidcusername)) {
-                    $oidcusername = $idtoken->claim('email');
-                }
-                if (empty($oidcusername)) {
-                    $oidcusername = $idtoken->claim('sub');
-                }
-                break;
-            default:
-                $oidcusername = '';
-        }
-
-        return $oidcusername;
+        // auth_voidc_get_binding_username_claim() has already resolved 'custom' → actual
+        // claim name and validated predefined values, so we can read it directly here.
+        return $idtoken->claim($bindingusernameclaim);
     }
 }

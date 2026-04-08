@@ -54,31 +54,31 @@ class authcode extends base {
      * @return array Array of IdPs.
      */
     public function loginpage_idp_list($wantsurl) {
-        if (!auth_voidc_is_setup_complete()) {
+        $clients = auth_voidc_get_enabled_clients();
+        if (empty($clients)) {
             return [];
         }
 
-        if (!empty($this->config->customicon)) {
-            $icon = new pix_icon('0/customicon', get_string('pluginname', 'auth_voidc'), 'auth_voidc');
-        } else {
-            $icon = (!empty($this->config->icon)) ? $this->config->icon : 'auth_voidc:o365';
-            $icon = explode(':', $icon);
-            if (isset($icon[1])) {
-                [$iconcomponent, $iconkey] = $icon;
+        $idps = [];
+        foreach ($clients as $client) {
+            // Core's prepare_identity_providers_for_output() overwrites iconurl from
+            // 'icon' when both are present, so emit exactly one of them.
+            $entry = [
+                'url' => new moodle_url('/auth/voidc/', [
+                    'source' => 'loginpage',
+                    'cid' => $client->id,
+                ]),
+                'name' => strip_tags(format_text($client->name)),
+            ];
+            $iconurl = auth_voidc_get_client_icon_url((int) $client->id);
+            if ($iconurl) {
+                $entry['iconurl'] = $iconurl;
             } else {
-                $iconcomponent = 'auth_voidc';
-                $iconkey = 'o365';
+                $entry['icon'] = new pix_icon('i/mnethost', s($client->name));
             }
-            $icon = new pix_icon($iconkey, get_string('pluginname', 'auth_voidc'), $iconcomponent);
+            $idps[] = $entry;
         }
-
-        return [
-            [
-                'url' => new moodle_url('/auth/voidc/', ['source' => 'loginpage']),
-                'icon' => $icon,
-                'name' => strip_tags(format_text($this->config->opname)),
-            ],
-        ];
+        return $idps;
     }
 
     /**
@@ -93,12 +93,17 @@ class authcode extends base {
     protected function getoidcparam($name, $fallback = '') {
         $val = optional_param($name, $fallback, PARAM_RAW);
         $val = trim($val);
-        $valclean = preg_replace('/[^A-Za-z0-9\_\-\.\+\/\=]/i', '', $val);
-        if ($valclean !== $val) {
+        if ($val === '') {
+            return $val;
+        }
+        // OAuth2 (RFC 6749 §A.11) defines these values as 1*VSCHAR — printable ASCII,
+        // no whitespace. The contents are opaque to us and validated for real at the
+        // token endpoint, so we only need to reject obvious garbage here.
+        if (!preg_match('/^[\x21-\x7E]+$/', $val)) {
             utils::debug('Authorization error.', __METHOD__, $name);
             throw new moodle_exception('errorauthgeneral', 'auth_voidc');
         }
-        return $valclean;
+        return $val;
     }
 
     /**
@@ -141,7 +146,7 @@ class authcode extends base {
                 'code' => $code,
                 'error_description' => optional_param('error_description', '', PARAM_TEXT),
             ];
-            // Response from OP.
+            // Response from OP — the client record is resolved from the state row inside handleauthresponse.
             $this->handleauthresponse($requestparams);
         } else {
             if (isloggedin() && !isguestuser() && empty($justauth) && empty($promptaconsent)) {
@@ -154,7 +159,18 @@ class authcode extends base {
                 redirect($urltogo);
                 die();
             }
-            // Initial login request.
+
+            // Initial login request — must have a client id.
+            $cid = optional_param('cid', 0, PARAM_INT);
+            if (empty($cid)) {
+                throw new moodle_exception('errornoclientrecord', 'auth_voidc');
+            }
+            $clientrec = auth_voidc_get_client($cid);
+            if (empty($clientrec) || empty($clientrec->enabled)) {
+                throw new moodle_exception('errorunknownclient', 'auth_voidc');
+            }
+            $this->set_clientrecord($clientrec);
+
             $stateparams = ['forceflow' => 'authcode'];
             $extraparams = [];
             if ($promptaconsent === true) {
@@ -232,6 +248,14 @@ class authcode extends base {
         if (empty($staterec)) {
             throw new moodle_exception('errorauthunknownstate', 'auth_voidc');
         }
+
+        // Resolve the client from the state row so the rest of this method (and any
+        // get_oidcclient() call) has the right credentials.
+        $clientrec = auth_voidc_get_client((int) $staterec->clientid);
+        if (empty($clientrec)) {
+            throw new moodle_exception('errorunknownclient', 'auth_voidc');
+        }
+        $this->set_clientrecord($clientrec);
 
         $orignonce = $staterec->nonce;
         $additionaldata = [];

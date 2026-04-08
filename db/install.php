@@ -30,7 +30,7 @@ function xmldb_auth_voidc_install() {
     // Set the default value for the bindingusernameclaim setting.
     $bindingusernameclaimconfig = get_config('auth_voidc', 'bindingusernameclaim');
     if (empty($bindingusernameclaimconfig)) {
-        set_config('bindingusernameclaim', 'preferred_username', 'auth_voidc');
+        set_config('bindingusernameclaim', 'auto', 'auth_voidc');
     }
 
     // Set the default value for the field_map_email setting.

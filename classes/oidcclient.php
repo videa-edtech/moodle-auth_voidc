@@ -57,6 +57,9 @@ class oidcclient {
     /** @var string The scope of the token. */
     protected $scope;
 
+    /** @var int The auth_voidc_clients.id this oidcclient is acting on behalf of. */
+    protected $clientrecordid = 0;
+
     /**
      * Constructor.
      *
@@ -81,6 +84,18 @@ class oidcclient {
         $this->redirecturi = $redirecturi;
         $this->tokenresource = !empty($tokenresource) ? $tokenresource : '';
         $this->scope = (!empty($scope)) ? $scope : 'openid profile email';
+    }
+
+    /**
+     * Set the auth_voidc_clients.id this oidcclient is acting on behalf of.
+     *
+     * Stored on every state row this client writes so the callback can find
+     * the right client record to use.
+     *
+     * @param int $id
+     */
+    public function set_clientrecordid(int $id): void {
+        $this->clientrecordid = $id;
     }
 
     /**
@@ -208,12 +223,16 @@ class oidcclient {
      */
     protected function getnewstate($nonce, array $stateparams = []) {
         global $DB;
+        if (empty($this->clientrecordid)) {
+            throw new moodle_exception('errornoclientrecord', 'auth_voidc');
+        }
         $staterec = new \stdClass;
         $staterec->sesskey = sesskey();
         $staterec->state = random_string(15);
         $staterec->nonce = $nonce;
         $staterec->timecreated = time();
         $staterec->additionaldata = serialize($stateparams);
+        $staterec->clientid = $this->clientrecordid;
         $DB->insert_record('auth_voidc_state', $staterec);
         return $staterec->state;
     }

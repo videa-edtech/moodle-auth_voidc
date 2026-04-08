@@ -26,7 +26,6 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-use auth_voidc\adminsetting\auth_voidc_admin_setting_iconselect;
 use auth_voidc\adminsetting\auth_voidc_admin_setting_loginflow;
 use auth_voidc\adminsetting\auth_voidc_admin_setting_redirecturi;
 use auth_voidc\utils;
@@ -126,105 +125,6 @@ if ($hassiteconfig) {
     $settings->add(new auth_voidc_admin_setting_redirecturi('auth_voidc/logoutendpoint',
         get_string('cfg_frontchannellogouturl_key', 'auth_voidc'), get_string('cfg_frontchannellogouturl_desc', 'auth_voidc'),
         utils::get_frontchannellogouturl()));
-
-    // Display heading.
-    $settings->add(new admin_setting_heading('auth_voidc/display_heading',
-        get_string('heading_display', 'auth_voidc'), get_string('heading_display_desc', 'auth_voidc')));
-
-    // Provider Name (opname).
-    $settings->add(new admin_setting_configtext('auth_voidc/opname',
-        get_string('cfg_opname_key', 'auth_voidc'), get_string('cfg_opname_desc', 'auth_voidc'),
-        get_string('pluginname', 'auth_voidc'), PARAM_TEXT));
-
-    // Icon.
-    $icons = [
-        [
-            'pix' => 'o365',
-            'alt' => new lang_string('cfg_iconalt_o365', 'auth_voidc'),
-            'component' => 'auth_voidc',
-        ],
-        [
-            'pix' => 't/locked',
-            'alt' => new lang_string('cfg_iconalt_locked', 'auth_voidc'),
-            'component' => 'moodle',
-        ],
-        [
-            'pix' => 't/lock',
-            'alt' => new lang_string('cfg_iconalt_lock', 'auth_voidc'),
-            'component' => 'moodle',
-        ],
-        [
-            'pix' => 't/go',
-            'alt' => new lang_string('cfg_iconalt_go', 'auth_voidc'),
-            'component' => 'moodle',
-        ],
-        [
-            'pix' => 't/stop',
-            'alt' => new lang_string('cfg_iconalt_stop', 'auth_voidc'),
-            'component' => 'moodle',
-        ],
-        [
-            'pix' => 't/user',
-            'alt' => new lang_string('cfg_iconalt_user', 'auth_voidc'),
-            'component' => 'moodle',
-        ],
-        [
-            'pix' => 'u/user35',
-            'alt' => new lang_string('cfg_iconalt_user2', 'auth_voidc'),
-            'component' => 'moodle',
-        ],
-        [
-            'pix' => 'i/permissions',
-            'alt' => new lang_string('cfg_iconalt_key', 'auth_voidc'),
-            'component' => 'moodle',
-        ],
-        [
-            'pix' => 'i/cohort',
-            'alt' => new lang_string('cfg_iconalt_group', 'auth_voidc'),
-            'component' => 'moodle',
-        ],
-        [
-            'pix' => 'i/groups',
-            'alt' => new lang_string('cfg_iconalt_group2', 'auth_voidc'),
-            'component' => 'moodle',
-        ],
-        [
-            'pix' => 'i/mnethost',
-            'alt' => new lang_string('cfg_iconalt_mnet', 'auth_voidc'),
-            'component' => 'moodle',
-        ],
-        [
-            'pix' => 'i/permissionlock',
-            'alt' => new lang_string('cfg_iconalt_userlock', 'auth_voidc'),
-            'component' => 'moodle',
-        ],
-        [
-            'pix' => 't/more',
-            'alt' => new lang_string('cfg_iconalt_plus', 'auth_voidc'),
-            'component' => 'moodle',
-        ],
-        [
-            'pix' => 't/approve',
-            'alt' => new lang_string('cfg_iconalt_check', 'auth_voidc'),
-            'component' => 'moodle',
-        ],
-        [
-            'pix' => 't/right',
-            'alt' => new lang_string('cfg_iconalt_rightarrow', 'auth_voidc'),
-            'component' => 'moodle',
-        ],
-    ];
-    $settings->add(new auth_voidc_admin_setting_iconselect('auth_voidc/icon',
-        get_string('cfg_icon_key', 'auth_voidc'), get_string('cfg_icon_desc', 'auth_voidc'), 'auth_voidc:o365', $icons));
-
-    // Custom icon.
-    $configkey = new lang_string('cfg_customicon_key', 'auth_voidc');
-    $configdesc = new lang_string('cfg_customicon_desc', 'auth_voidc');
-    $customiconsetting = new admin_setting_configstoredfile('auth_voidc/customicon',
-        get_string('cfg_customicon_key', 'auth_voidc'), get_string('cfg_customicon_desc', 'auth_voidc'), 'customicon', 0,
-        ['accepted_types' => ['.png', '.jpg', '.ico'], 'maxbytes' => get_max_upload_file_size()]);
-    $customiconsetting->set_updatedcallback('auth_voidc_initialize_customicon');
-    $settings->add($customiconsetting);
 
     // Debugging heading.
     $settings->add(new admin_setting_heading('auth_voidc/debugging_heading',

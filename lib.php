@@ -34,39 +34,247 @@ use auth_voidc\utils;
 const AUTH_VOIDC_AUTH_METHOD_SECRET = 1;
 
 /**
- * Initialize custom icon for OIDC authentication.
- *
- * This function sets up a custom icon for the OIDC plugin by creating necessary directories
- * and copying the file into the specified location in Moodle's data directory.
- *
- * @param string $filefullname Full name of the custom icon file.
- * @return bool False if the file is missing or is a directory; void otherwise.
+ * IDP type: generic OIDC provider (only type currently supported by voidc).
  */
-function auth_voidc_initialize_customicon($filefullname) {
-    global $CFG;
+const AUTH_VOIDC_IDP_TYPE_OTHER = 0;
 
-    $file = get_config('auth_voidc', 'customicon');
-    $systemcontext = \context_system::instance();
-    $fullpath = "/{$systemcontext->id}/auth_voidc/customicon/0{$file}";
+/**
+ * File area used for per-client uploaded icons.
+ */
+const AUTH_VOIDC_ICON_FILEAREA = 'clienticon';
 
+/**
+ * Return the options array used by the icon filemanager element.
+ *
+ * @return array
+ */
+function auth_voidc_client_icon_filemanager_options(): array {
+    return [
+        'maxfiles' => 1,
+        'subdirs' => 0,
+        'accepted_types' => ['web_image'],
+        'maxbytes' => 512 * 1024,
+    ];
+}
+
+/**
+ * Return the moodle_url to the uploaded icon for a client, or null if none uploaded.
+ *
+ * @param int $clientid
+ * @return \moodle_url|null
+ */
+function auth_voidc_get_client_icon_url(int $clientid): ?\moodle_url {
+    $context = \context_system::instance();
     $fs = get_file_storage();
-    if (!($file = $fs->get_file_by_hash(sha1($fullpath))) || $file->is_directory()) {
+    $files = $fs->get_area_files($context->id, 'auth_voidc', AUTH_VOIDC_ICON_FILEAREA,
+        $clientid, 'itemid, filepath, filename', false);
+    if (empty($files)) {
+        return null;
+    }
+    $file = reset($files);
+    return \moodle_url::make_pluginfile_url(
+        $file->get_contextid(),
+        $file->get_component(),
+        $file->get_filearea(),
+        $file->get_itemid(),
+        $file->get_filepath(),
+        $file->get_filename()
+    );
+}
+
+/**
+ * Serve files from the auth_voidc plugin (per-client icons).
+ *
+ * @param stdClass $course
+ * @param stdClass $cm
+ * @param \context $context
+ * @param string $filearea
+ * @param array $args
+ * @param bool $forcedownload
+ * @param array $options
+ * @return bool
+ */
+function auth_voidc_pluginfile($course, $cm, $context, $filearea, $args, $forcedownload, array $options = []) {
+    if ($context->contextlevel !== CONTEXT_SYSTEM) {
         return false;
     }
-    $pixpluginsdir = 'pix_plugins/auth/voidc/0';
-    $pixpluginsdirparts = explode('/', $pixpluginsdir);
-    $curdir = $CFG->dataroot;
-    foreach ($pixpluginsdirparts as $dir) {
-        $curdir .= '/' . $dir;
-        if (!file_exists($curdir)) {
-            mkdir($curdir);
-        }
+    if ($filearea !== AUTH_VOIDC_ICON_FILEAREA) {
+        return false;
     }
 
-    if (file_exists($CFG->dataroot . '/pix_plugins/auth/voidc/0')) {
-        $file->copy_content_to($CFG->dataroot . '/pix_plugins/auth/voidc/0/customicon.jpg');
-        theme_reset_all_caches();
+    $itemid = (int) array_shift($args);
+    $filename = array_pop($args);
+    $filepath = empty($args) ? '/' : '/' . implode('/', $args) . '/';
+
+    $fs = get_file_storage();
+    $file = $fs->get_file($context->id, 'auth_voidc', $filearea, $itemid, $filepath, $filename);
+    if (!$file || $file->is_directory()) {
+        return false;
     }
+
+    // Login icons must be reachable on the login page, so no login check.
+    send_stored_file($file, 60 * 60 * 24, 0, $forcedownload, $options);
+}
+
+/**
+ * Fetch a single client record by id.
+ *
+ * @param int $id
+ * @return stdClass|null
+ */
+function auth_voidc_get_client(int $id): ?stdClass {
+    global $DB;
+    $rec = $DB->get_record('auth_voidc_clients', ['id' => $id]);
+    return $rec ?: null;
+}
+
+/**
+ * Return all clients ordered for display in the admin list.
+ *
+ * @return array
+ */
+function auth_voidc_get_all_clients(): array {
+    global $DB;
+    return $DB->get_records('auth_voidc_clients', null, 'sortorder ASC, id ASC');
+}
+
+/**
+ * Return all enabled clients ordered for the login page.
+ *
+ * @return array
+ */
+function auth_voidc_get_enabled_clients(): array {
+    global $DB;
+    return $DB->get_records('auth_voidc_clients', ['enabled' => 1], 'sortorder ASC, id ASC');
+}
+
+/**
+ * Insert a new client. The form data should already be validated.
+ *
+ * @param stdClass $data
+ * @return int new client id
+ */
+function auth_voidc_create_client(stdClass $data): int {
+    global $DB;
+    $now = time();
+    $rec = (object) [
+        'name' => $data->name,
+        'idptype' => AUTH_VOIDC_IDP_TYPE_OTHER,
+        'clientid' => $data->clientid,
+        'clientauthmethod' => AUTH_VOIDC_AUTH_METHOD_SECRET,
+        'clientsecret' => $data->clientsecret ?? null,
+        'clientprivatekey' => null,
+        'clientcert' => null,
+        'authendpoint' => $data->authendpoint,
+        'tokenendpoint' => $data->tokenendpoint,
+        'oidcresource' => $data->oidcresource ?? null,
+        'oidcscope' => !empty($data->oidcscope) ? $data->oidcscope : 'openid profile email',
+        'bindingusernameclaim' => !empty($data->bindingusernameclaim) ? $data->bindingusernameclaim : 'auto',
+        'customclaimname' => !empty($data->customclaimname) ? $data->customclaimname : null,
+        'icon' => null,
+        'sortorder' => auth_voidc_next_client_sortorder(),
+        'enabled' => 1,
+        'timecreated' => $now,
+        'timemodified' => $now,
+    ];
+    return $DB->insert_record('auth_voidc_clients', $rec);
+}
+
+/**
+ * Update an existing client.
+ *
+ * @param int $id
+ * @param stdClass $data
+ */
+function auth_voidc_update_client(int $id, stdClass $data): void {
+    global $DB;
+    $rec = (object) [
+        'id' => $id,
+        'name' => $data->name,
+        'clientid' => $data->clientid,
+        'clientsecret' => $data->clientsecret ?? null,
+        'authendpoint' => $data->authendpoint,
+        'tokenendpoint' => $data->tokenendpoint,
+        'oidcresource' => $data->oidcresource ?? null,
+        'oidcscope' => !empty($data->oidcscope) ? $data->oidcscope : 'openid profile email',
+        'bindingusernameclaim' => !empty($data->bindingusernameclaim) ? $data->bindingusernameclaim : 'auto',
+        'customclaimname' => !empty($data->customclaimname) ? $data->customclaimname : null,
+        'timemodified' => time(),
+    ];
+    $DB->update_record('auth_voidc_clients', $rec);
+}
+
+/**
+ * Delete a client and any uploaded icon files.
+ *
+ * @param int $id
+ */
+function auth_voidc_delete_client(int $id): void {
+    global $DB;
+    $context = \context_system::instance();
+    $fs = get_file_storage();
+    $fs->delete_area_files($context->id, 'auth_voidc', AUTH_VOIDC_ICON_FILEAREA, $id);
+    $DB->delete_records('auth_voidc_clients', ['id' => $id]);
+}
+
+/**
+ * Toggle the enabled flag on a client.
+ *
+ * @param int $id
+ * @param bool $enabled
+ */
+function auth_voidc_set_client_enabled(int $id, bool $enabled): void {
+    global $DB;
+    $DB->update_record('auth_voidc_clients', (object) [
+        'id' => $id,
+        'enabled' => $enabled ? 1 : 0,
+        'timemodified' => time(),
+    ]);
+}
+
+/**
+ * Move a client one position up or down in the sort order.
+ *
+ * Swaps sortorder values with the adjacent client to keep ordering deterministic.
+ *
+ * @param int $id
+ * @param string $direction 'up' or 'down'
+ */
+function auth_voidc_move_client(int $id, string $direction): void {
+    global $DB;
+    $clients = array_values(auth_voidc_get_all_clients());
+    $position = null;
+    foreach ($clients as $idx => $c) {
+        if ((int) $c->id === $id) {
+            $position = $idx;
+            break;
+        }
+    }
+    if ($position === null) {
+        return;
+    }
+    $swapwith = ($direction === 'up') ? $position - 1 : $position + 1;
+    if ($swapwith < 0 || $swapwith >= count($clients)) {
+        return;
+    }
+    $a = $clients[$position];
+    $b = $clients[$swapwith];
+    $now = time();
+    $DB->update_record('auth_voidc_clients',
+        (object) ['id' => $a->id, 'sortorder' => (int) $b->sortorder, 'timemodified' => $now]);
+    $DB->update_record('auth_voidc_clients',
+        (object) ['id' => $b->id, 'sortorder' => (int) $a->sortorder, 'timemodified' => $now]);
+}
+
+/**
+ * Return the next sortorder value to use for a newly created client.
+ *
+ * @return int
+ */
+function auth_voidc_next_client_sortorder(): int {
+    global $DB;
+    $max = (int) $DB->get_field_sql('SELECT MAX(sortorder) FROM {auth_voidc_clients}');
+    return $max + 1;
 }
 
 /**
@@ -515,17 +723,8 @@ function auth_voidc_config_name_in_form(string $stringid) {
  * @return bool
  */
 function auth_voidc_is_setup_complete() {
-    $pluginconfig = get_config('auth_voidc');
-
-    if (empty($pluginconfig->clientid) || empty($pluginconfig->clientsecret)) {
-        return false;
-    }
-
-    if (empty($pluginconfig->authendpoint) || empty($pluginconfig->tokenendpoint)) {
-        return false;
-    }
-
-    return true;
+    global $DB;
+    return $DB->record_exists('auth_voidc_clients', ['enabled' => 1]);
 }
 
 /**
@@ -546,21 +745,33 @@ function auth_voidc_get_client_auth_method_name() {
 /**
  * Return the name of the configured binding username claim.
  *
+ * If a client record is provided, the client's own bindingusernameclaim takes
+ * precedence; otherwise falls back to the global config (kept for the
+ * change_binding_username_claim_tool which operates on legacy tokens).
+ *
+ * @param \stdClass|null $clientrecord Optional auth_voidc_clients row.
  * @return string
  */
-function auth_voidc_get_binding_username_claim(): string {
-    $bindingusernameclaim = get_config('auth_voidc', 'bindingusernameclaim');
-
-    if (empty($bindingusernameclaim)) {
-        $bindingusernameclaim = 'auto';
-    } else if ($bindingusernameclaim === 'custom') {
-        $bindingusernameclaim = get_config('auth_voidc', 'customclaimname');
-    } else if (!in_array($bindingusernameclaim, ['auto', 'preferred_username', 'email', 'upn', 'unique_name', 'sub', 'oid',
-        'samaccountname'])) {
-        $bindingusernameclaim = 'auto';
+function auth_voidc_get_binding_username_claim(?\stdClass $clientrecord = null): string {
+    if ($clientrecord !== null && !empty($clientrecord->bindingusernameclaim)) {
+        $raw = $clientrecord->bindingusernameclaim;
+        $custom = $clientrecord->customclaimname ?? '';
+    } else {
+        $raw = get_config('auth_voidc', 'bindingusernameclaim');
+        $custom = get_config('auth_voidc', 'customclaimname');
     }
 
-    return $bindingusernameclaim;
+    if (empty($raw)) {
+        return 'auto';
+    }
+    if ($raw === 'custom') {
+        // Custom claim names are free-form, bypass the whitelist.
+        return !empty($custom) ? $custom : 'auto';
+    }
+    if (!in_array($raw, ['auto', 'preferred_username', 'email', 'upn', 'unique_name', 'sub', 'oid', 'samaccountname'])) {
+        return 'auto';
+    }
+    return $raw;
 }
 
 /**

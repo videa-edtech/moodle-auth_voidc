@@ -134,7 +134,6 @@ class rocreds extends base {
     public function user_login($username, $password = null) {
         global $DB;
 
-        $client = $this->get_oidcclient();
         $authparams = ['code' => ''];
 
         $oidcusername = $username;
@@ -146,9 +145,34 @@ class rocreds extends base {
             }
         }
 
-        // Make request.
-        $tokenparams = $client->rocredsrequest($oidcusername, $password);
-        if (!empty($tokenparams) && isset($tokenparams['token_type']) && $tokenparams['token_type'] === 'Bearer') {
+        // If we already have a token for this user, prefer its client so we hit the
+        // IdP that issued it. Otherwise try each enabled client until one accepts the
+        // credentials — the password grant has no UI for the user to pick a provider.
+        $clientsoftry = [];
+        if (!empty($oidctoken) && !empty($oidctoken->clientid)) {
+            $known = auth_voidc_get_client((int) $oidctoken->clientid);
+            if (!empty($known) && !empty($known->enabled)) {
+                $clientsoftry[(int) $known->id] = $known;
+            }
+        }
+        foreach (auth_voidc_get_enabled_clients() as $c) {
+            if (!isset($clientsoftry[(int) $c->id])) {
+                $clientsoftry[(int) $c->id] = $c;
+            }
+        }
+        if (empty($clientsoftry)) {
+            return false;
+        }
+
+        foreach ($clientsoftry as $clientrec) {
+            $this->set_clientrecord($clientrec);
+            $client = $this->get_oidcclient();
+
+            $tokenparams = $client->rocredsrequest($oidcusername, $password);
+            if (empty($tokenparams) || !isset($tokenparams['token_type']) || $tokenparams['token_type'] !== 'Bearer') {
+                continue;
+            }
+
             [$oidcuniqid, $idtoken] = $this->process_idtoken($tokenparams['id_token']);
 
             // Check restrictions.
@@ -167,6 +191,7 @@ class rocreds extends base {
             }
             return true;
         }
+
         return false;
     }
 }

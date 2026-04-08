@@ -45,8 +45,7 @@ class disconnect extends \moodleform {
             $userrec = $DB->get_record('user', ['id' => $USER->id]);
         }
 
-        $authconfig = get_config('auth_voidc');
-        $opname = (!empty($authconfig->opname)) ? $authconfig->opname : get_string('pluginname', 'auth_voidc');
+        $opname = get_string('pluginname', 'auth_voidc');
 
         $mform =& $this->_form;
         $mform->addElement('html', \html_writer::tag('h4', get_string('ucp_disconnect_title', 'auth_voidc', $opname)));

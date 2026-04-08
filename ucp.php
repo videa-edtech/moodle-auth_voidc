@@ -63,8 +63,7 @@ if (!empty($action)) {
     $PAGE->set_context(\context_system::instance());
     $PAGE->set_pagelayout('standard');
     $USER->editing = false;
-    $authconfig = get_config('auth_voidc');
-    $opname = (!empty($authconfig->opname)) ? $authconfig->opname : get_string('pluginname', 'auth_voidc');
+    $opname = get_string('pluginname', 'auth_voidc');
 
     $ucptitle = get_string('ucp_title', 'auth_voidc', $opname);
     $PAGE->navbar->add($ucptitle, $PAGE->url);
