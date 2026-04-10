@@ -423,5 +423,18 @@ function xmldb_auth_voidc_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2026040900, 'auth', 'voidc');
     }
 
+    if ($oldversion < 2026041000) {
+        // Add per-client logout endpoint.
+        $table = new xmldb_table('auth_voidc_clients');
+        $field = new xmldb_field('logoutendpoint', XMLDB_TYPE_TEXT, null, null, null, null, null, 'customclaimname');
+
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Voidc savepoint reached.
+        upgrade_plugin_savepoint(true, 2026041000, 'auth', 'voidc');
+    }
+
     return true;
 }

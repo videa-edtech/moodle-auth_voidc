@@ -171,6 +171,7 @@ function auth_voidc_create_client(stdClass $data): int {
         'oidcscope' => !empty($data->oidcscope) ? $data->oidcscope : 'openid profile email',
         'bindingusernameclaim' => !empty($data->bindingusernameclaim) ? $data->bindingusernameclaim : 'auto',
         'customclaimname' => !empty($data->customclaimname) ? $data->customclaimname : null,
+        'logoutendpoint' => !empty($data->logoutendpoint) ? $data->logoutendpoint : null,
         'icon' => null,
         'sortorder' => auth_voidc_next_client_sortorder(),
         'enabled' => 1,
@@ -199,6 +200,7 @@ function auth_voidc_update_client(int $id, stdClass $data): void {
         'oidcscope' => !empty($data->oidcscope) ? $data->oidcscope : 'openid profile email',
         'bindingusernameclaim' => !empty($data->bindingusernameclaim) ? $data->bindingusernameclaim : 'auto',
         'customclaimname' => !empty($data->customclaimname) ? $data->customclaimname : null,
+        'logoutendpoint' => !empty($data->logoutendpoint) ? $data->logoutendpoint : null,
         'timemodified' => time(),
     ];
     $DB->update_record('auth_voidc_clients', $rec);

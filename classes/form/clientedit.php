@@ -87,6 +87,11 @@ class clientedit extends moodleform {
         $mform->addRule('tokenendpoint', null, 'required', null, 'client');
         $mform->addElement('static', 'tokenendpoint_help', '', get_string('tokenendpoint_help', 'auth_voidc'));
 
+        // Logout endpoint (optional).
+        $mform->addElement('text', 'logoutendpoint', get_string('logoutendpoint', 'auth_voidc'), ['size' => 60]);
+        $mform->setType('logoutendpoint', PARAM_URL);
+        $mform->addElement('static', 'logoutendpoint_help', '', get_string('logoutendpoint_help', 'auth_voidc'));
+
         // Other parameters header.
         $mform->addElement('header', 'otherparams', get_string('settings_section_other_params', 'auth_voidc'));
         $mform->setExpanded('otherparams');

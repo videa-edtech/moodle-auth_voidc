@@ -295,80 +295,81 @@ class auth_plugin_voidc extends \auth_plugin_base {
     }
 
     /**
-     * Log out user from Microsoft 365 if single sign off integration is enabled.
+     * Log the user out of their IdP when they log out of Moodle.
+     *
+     * Uses the per-client logoutendpoint when available, falling back to the
+     * global logouturi setting. For Keycloak IdPs (oidc_service = keycloak),
+     * performs a back-channel token revocation POST. For everything else,
+     * performs an RP-Initiated Logout redirect.
      *
      * @param stdClass $user
-     *
      * @return bool
      */
     public function postlogout_hook($user) {
-        global $CFG, $DB;
+        global $DB;
 
-        $singlesignoutsetting = get_config('auth_voidc', 'single_sign_off');
+        if ($user->auth !== 'voidc') {
+            return true;
+        }
+
+        // Find the user's most recent token to determine which IdP they came from.
+        $tokenrec = $DB->get_record('auth_voidc_token', ['userid' => $user->id]);
+        if (empty($tokenrec)) {
+            return true;
+        }
+
+        // Resolve the logout endpoint: prefer the per-client value, fall back to global.
+        $logouturl = null;
+        $clientrec = null;
+        if (!empty($tokenrec->clientid)) {
+            $clientrec = $DB->get_record('auth_voidc_clients', ['id' => $tokenrec->clientid]);
+            if (!empty($clientrec->logoutendpoint)) {
+                $logouturl = $clientrec->logoutendpoint;
+            }
+        }
+        if (empty($logouturl)) {
+            $logouturl = get_config('auth_voidc', 'logouturi');
+        }
+        if (empty($logouturl)) {
+            return true;
+        }
+
         $oidcservicesetting = get_config('auth_voidc', 'oidc_service');
 
-        if ($singlesignoutsetting) {
-            $redirect = false;
+        if ($oidcservicesetting === 'keycloak') {
+            // Keycloak: back-channel token revocation via POST.
+            $clientid = !empty($clientrec) ? $clientrec->clientid : get_config('auth_voidc', 'clientid');
+            $clientsecret = !empty($clientrec) ? ($clientrec->clientsecret ?? '') : get_config('auth_voidc', 'clientsecret');
 
-            if ($user->auth == 'voidc') {
-                $redirect = true;
+            $postdata = http_build_query([
+                'client_id' => $clientid,
+                'client_secret' => $clientsecret,
+                'refresh_token' => $tokenrec->refreshtoken ?? '',
+                'post_logout_redirect_uri' => get_login_url(),
+            ], '', '&');
+
+            $curl = curl_init();
+            curl_setopt_array($curl, [
+                CURLOPT_URL => $logouturl,
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_MAXREDIRS => 10,
+                CURLOPT_TIMEOUT => 10,
+                CURLOPT_FOLLOWLOCATION => true,
+                CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+                CURLOPT_POST => true,
+                CURLOPT_POSTFIELDS => $postdata,
+                CURLOPT_HTTPHEADER => ['Content-Type: application/x-www-form-urlencoded'],
+            ]);
+            curl_exec($curl);
+            curl_close($curl);
+        } else {
+            // RP-Initiated Logout: redirect to the IdP's end_session endpoint.
+            $params = ['post_logout_redirect_uri' => get_login_url()];
+            if (!empty($tokenrec->idtoken)) {
+                $params['id_token_hint'] = $tokenrec->idtoken;
             }
-
-            if ($oidcservicesetting == 'keycloak') {
-                $redirect = false;
-
-                if ($user->auth == 'voidc') {
-                    $logoutUrl = get_config('auth_voidc', 'logouturi');
-                    $clientId = get_config('auth_voidc', 'clientid');
-                    $clientSecret = get_config('auth_voidc', 'clientsecret');
-
-                    $oidctoken = $DB->get_record('auth_voidc_token', ['username' => $user->username], '*', MUST_EXIST);
-
-                    // Data to send with the request.
-                    $postData = http_build_query([
-                        'client_id' => $clientId,
-                        'client_secret' => $clientSecret,
-                        'refresh_token' => $oidctoken->refreshtoken,
-                        'post_logout_redirect_uri' => get_login_url()
-                    ], '', '&');
-
-                    $curl = curl_init();
-
-                    curl_setopt_array($curl, array(
-                        CURLOPT_URL => $logoutUrl,
-                        CURLOPT_RETURNTRANSFER => true,
-                        CURLOPT_ENCODING => '',
-                        CURLOPT_MAXREDIRS => 10,
-                        CURLOPT_TIMEOUT => 0,
-                        CURLOPT_FOLLOWLOCATION => true,
-                        CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-                        CURLOPT_CUSTOMREQUEST => 'POST',
-                        CURLOPT_POSTFIELDS => $postData,
-                        CURLOPT_HTTPHEADER => array(
-                            'Content-Type: application/x-www-form-urlencoded'
-                        ),
-                    ));
-
-                    $response = curl_exec($curl);
-                    $httpCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
-
-                    curl_close($curl);
-
-                    if ($httpCode == 204) {
-                        echo "OIDC: logout_success";
-                    } else {
-                        echo "OIDC: logout_failed";
-                        echo "OIDC_ERROR: " . $response;
-                    }
-                }
-            }
-
-            if ($redirect) {
-                $logouturl = get_config('auth_voidc', 'logouturi');
-                if ($logouturl) {
-                    redirect($logouturl);
-                }
-            }
+            $separator = (strpos($logouturl, '?') !== false) ? '&' : '?';
+            redirect($logouturl . $separator . http_build_query($params));
         }
 
         return true;

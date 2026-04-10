@@ -79,6 +79,7 @@
         <FIELD NAME="oidcscope" TYPE="char" LENGTH="255" NOTNULL="true" DEFAULT="openid profile email" SEQUENCE="false" COMMENT="Requested scopes"/>
         <FIELD NAME="bindingusernameclaim" TYPE="char" LENGTH="64" NOTNULL="true" DEFAULT="auto" SEQUENCE="false" COMMENT="ID token claim used to derive the Moodle username (auto, preferred_username, email, sub, custom)"/>
         <FIELD NAME="customclaimname" TYPE="char" LENGTH="128" NOTNULL="false" SEQUENCE="false" COMMENT="When bindingusernameclaim=custom, the name of the claim to read"/>
+        <FIELD NAME="logoutendpoint" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="IdP logout/end_session endpoint URL for RP-Initiated Logout"/>
         <FIELD NAME="icon" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false" COMMENT="Icon component:key"/>
         <FIELD NAME="sortorder" TYPE="int" LENGTH="5" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Order on login page"/>
         <FIELD NAME="enabled" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="1" SEQUENCE="false" COMMENT="1=enabled, 0=disabled"/>
