@@ -29,8 +29,8 @@ defined('MOODLE_INTERNAL') || die();
 // phpcs:disable moodle.Files.LangFilesOrdering.IncorrectOrder
 // phpcs:disable moodle.Files.LangFilesOrdering.UnexpectedComment
 
-$string['pluginname'] = 'OpenID Connect';
-$string['auth_voidcdescription'] = 'The OpenID Connect authentication plugin provides single-sign-on functionality using configurable IdP.';
+$string['pluginname'] = 'Vloom OpenID Connect';
+$string['auth_voidcdescription'] = 'The Vloom OpenID Connect authentication plugin provides single-sign-on functionality using configurable IdP.';
 
 // Configuration pages.
 $string['settings_page_other_settings'] = 'Other options';
@@ -92,6 +92,8 @@ $string['cfg_redirecturi_desc'] = 'This is the URI to register as the "Redirect 
 $string['tokenendpoint'] = 'Token Endpoint';
 $string['tokenendpoint_help'] = 'The URI of the token endpoint from your IdP to use.<br/>
 Note if the site is to be configured to allow users from other tenants to access, tenant specific token endpoint cannot be used.';
+$string['logoutendpoint'] = 'Logout Endpoint';
+$string['logoutendpoint_help'] = 'The end_session endpoint from your IdP. When a user logs out of Moodle, they will also be logged out of this IdP. Leave blank to skip IdP logout for this client.';
 $string['cfg_userrestrictions_key'] = 'User Restrictions';
 $string['cfg_userrestrictions_desc'] = 'Only allow users to log in that meet certain restrictions. <br /><b>How to use user restrictions: </b> <ul><li>Enter a <a href="https://en.wikipedia.org/wiki/Regular_expression">regular expression</a> pattern that matches the usernames of users you want to allow.</li><li>Enter one pattern per line</li><li>If you enter multiple patterns a user will be allowed if they match ANY of the patterns.</li><li>The character "/" should be escaped with "\".</li><li>If you don\'t enter any restrictions above, all users that can log in to the OpenID Connect IdP will be accepted by Moodle.</li><li>Any user that does not match any entered pattern(s) will be prevented from logging in using OpenID Connect.</li></ul>';
 $string['cfg_userrestrictionscasesensitive_key'] = 'User Restrictions Case Sensitive';
@@ -164,6 +166,20 @@ $string['error_invalid_client_authentication_method'] = "Invalid client authenti
 $string['error_empty_client_secret'] = 'Client secret cannot be empty';
 $string['error_empty_oidcresource'] = 'Resource cannot be empty.';
 $string['erroruserwithusernamealreadyexists'] = 'Error occurred when trying to rename your Moodle account. A Moodle user with the new username already exists. Ask your site administrator to resolve this first.';
+$string['errorusernamecollision'] = 'A Moodle account with the username "{$a}" already exists and belongs to a different identity. To protect that account, we cannot automatically sign you in with the same username. Please contact your site administrator so a unique username can be assigned to your account.';
+$string['choose_username_pagetitle'] = 'Choose a username';
+$string['choose_username_heading'] = 'Choose a username to finish signing in';
+$string['choose_username_description'] = 'The username "{$a}" is already in use on this site and belongs to a different account. To finish creating your account, please choose a different username below. This will only change how you appear in Moodle - you\'ll still sign in through your identity provider as usual.';
+$string['choose_username_label'] = 'New username';
+$string['choose_username_label_help'] = 'Pick a unique username for your Moodle account. You can use lowercase letters, numbers, and the characters . - _ @. This is the name you\'ll be identified by inside Moodle; your identity provider login does not change.';
+$string['choose_username_submit'] = 'Create account';
+$string['choose_username_required'] = 'Please enter a username.';
+$string['choose_username_invalid'] = 'That username contains characters that aren\'t allowed. Use lowercase letters, numbers, and the characters . - _ @.';
+$string['choose_username_taken'] = 'That username is already in use. Please choose a different one.';
+$string['choose_username_same_as_collided'] = 'That\'s the username that already exists - please choose a different one.';
+$string['choose_username_missing'] = 'There is no pending sign-in to complete. Please start signing in again.';
+$string['choose_username_expired'] = 'Your sign-in session expired before you finished choosing a username. Please sign in again.';
+$string['choose_username_cancelled'] = 'Sign-in cancelled.';
 $string['error_no_response_available'] = 'No responses available.';
 
 $string['eventuserauthed'] = 'User Authorized with OpenID Connect';

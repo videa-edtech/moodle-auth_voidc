@@ -96,7 +96,7 @@ class authcode extends base {
         if ($val === '') {
             return $val;
         }
-        // OAuth2 (RFC 6749 §A.11) defines these values as 1*VSCHAR — printable ASCII,
+        // OAuth2 (RFC 6749 §A.11) defines these values as 1*VSCHAR - printable ASCII,
         // no whitespace. The contents are opaque to us and validated for real at the
         // token endpoint, so we only need to reject obvious garbage here.
         if (!preg_match('/^[\x21-\x7E]+$/', $val)) {
@@ -146,7 +146,7 @@ class authcode extends base {
                 'code' => $code,
                 'error_description' => optional_param('error_description', '', PARAM_TEXT),
             ];
-            // Response from OP — the client record is resolved from the state row inside handleauthresponse.
+            // Response from OP - the client record is resolved from the state row inside handleauthresponse.
             $this->handleauthresponse($requestparams);
         } else {
             if (isloggedin() && !isguestuser() && empty($justauth) && empty($promptaconsent)) {
@@ -160,7 +160,7 @@ class authcode extends base {
                 die();
             }
 
-            // Initial login request — must have a client id.
+            // Initial login request - must have a client id.
             $cid = optional_param('cid', 0, PARAM_INT);
             if (empty($cid)) {
                 throw new moodle_exception('errornoclientrecord', 'auth_voidc');
@@ -216,6 +216,73 @@ class authcode extends base {
             bool $selectaccount = false) {
         $client = $this->get_oidcclient();
         $client->authrequest($promptlogin, $stateparams, $extraparams, $selectaccount);
+    }
+
+    /**
+     * Build a suggested non-colliding username by appending a slug of the current
+     * client's display name to the colliding name. Example: "johndoe" + "IdP B"
+     * → "johndoe.idpb". Result is clamped to the username column size.
+     *
+     * @param string $collided The username that already exists in Moodle.
+     * @return string A suggestion; not guaranteed to be collision-free (the
+     *                choose-username form re-validates uniqueness on submit).
+     */
+    public function build_username_suggestion(string $collided): string {
+        $slug = '';
+        if (!empty($this->clientrecord) && !empty($this->clientrecord->name)) {
+            $slug = preg_replace('/[^a-z0-9]+/', '', core_text::strtolower($this->clientrecord->name));
+        }
+        if ($slug === '') {
+            $slug = 'alt';
+        }
+        // auth_voidc_token.username is char(100); keep some headroom.
+        $collided = substr($collided, 0, 80);
+        $slug = substr($slug, 0, 15);
+        return $collided . '.' . $slug;
+    }
+
+    /**
+     * Finalize a new-user signup: enforce account-creation policy, create the
+     * Moodle user, and create the auth_voidc_token row linking to it.
+     *
+     * Shared between the normal new-user branch in handleauthresponse() and the
+     * choose-username page (auth/voidc/choose_username.php). Callers must have
+     * already:
+     *   - Set $this->clientrecord (createtoken depends on it).
+     *   - Verified no existing auth_voidc_token row exists for $oidcuniqid.
+     *   - Verified $username does not collide with an existing Moodle user.
+     *
+     * @param string $oidcuniqid
+     * @param string $username Must be already validated (unique, Moodle-clean).
+     * @param array $authparams
+     * @param array $tokenparams
+     * @param jwt $idtoken
+     * @return array [\stdClass $user, \stdClass $tokenrec]
+     */
+    public function finalize_new_user_signup(string $oidcuniqid, string $username, array $authparams,
+            array $tokenparams, jwt $idtoken): array {
+        global $CFG, $DB;
+
+        if (!empty($CFG->authpreventaccountcreation)) {
+            // Trigger login failed event.
+            $failurereason = AUTH_LOGIN_NOUSER;
+            $eventdata = ['other' => ['username' => $username, 'reason' => $failurereason]];
+            $event = \core\event\user_login_failed::create($eventdata);
+            $event->trigger();
+            throw new moodle_exception('errorauthloginfailednouser', 'auth_voidc', null, null, '1');
+        }
+
+        if (!$CFG->allowaccountssameemail) {
+            $userinfo = $this->get_userinfo($username);
+            if ($DB->count_records('user', ['email' => $userinfo['email'], 'deleted' => 0]) > 0) {
+                throw new moodle_exception('errorauthloginfaileddupemail', 'auth_voidc', null, null, '1');
+            }
+        }
+
+        $user = create_user_record($username, '', 'voidc');
+        $tokenrec = $this->createtoken($oidcuniqid, $username, $authparams, $tokenparams, $idtoken, $user->id);
+
+        return [$user, $tokenrec];
     }
 
     /**
@@ -441,7 +508,7 @@ class authcode extends base {
      * @param jwt $idtoken A JWT object representing the received id_token.
      */
     protected function handlelogin(string $oidcuniqid, array $authparams, array $tokenparams, jwt $idtoken) {
-        global $DB, $CFG;
+        global $DB, $CFG, $SESSION;
 
         $tokenrec = $DB->get_record('auth_voidc_token', ['oidcuniqid' => $oidcuniqid]);
 
@@ -536,9 +603,10 @@ class authcode extends base {
                 throw new moodle_exception('errorauthgeneral', 'auth_voidc', null, null, '2');
             }
         } else {
-            /* No existing token, user not connected. Possibilities:
-                - Matched user.
-                - New user (maybe create).
+            /* No existing token, user not connected. This is always a new-user signup
+               path now - we no longer silently adopt an existing Moodle user that
+               happens to share the derived username, because in a multi-IdP setup
+               that would let IdP-B's "johndoe" hijack IdP-A's Moodle account.
             */
 
             // Generate a Moodle username from token claims.
@@ -551,28 +619,30 @@ class authcode extends base {
             }
 
             $username = trim(core_text::strtolower($username));
-            $tokenrec = $this->createtoken($oidcuniqid, $username, $authparams, $tokenparams, $idtoken);
 
+            // Collision check: if a Moodle user with this derived username already
+            // exists, it belongs to a different identity (another IdP, a manual
+            // account, or another auth plugin). We must not silently cross-wire
+            // accounts. Instead, stash the verified IdP state in the session and
+            // redirect the user to a page where they can choose a unique username.
             $existinguserparams = ['username' => $username, 'mnethostid' => $CFG->mnet_localhost_id];
-            if ($DB->record_exists('user', $existinguserparams) !== true) {
-                // User does not exist. Create user if site allows, otherwise fail.
-                if (empty($CFG->authpreventaccountcreation)) {
-                    if (!$CFG->allowaccountssameemail) {
-                        $userinfo = $this->get_userinfo($username);
-                        if ($DB->count_records('user', ['email' => $userinfo['email'], 'deleted' => 0]) > 0) {
-                            throw new moodle_exception('errorauthloginfaileddupemail', 'auth_voidc', null, null, '1');
-                        }
-                    }
-                    $user = create_user_record($username, '', 'voidc');
-                } else {
-                    // Trigger login failed event.
-                    $failurereason = AUTH_LOGIN_NOUSER;
-                    $eventdata = ['other' => ['username' => $username, 'reason' => $failurereason]];
-                    $event = \core\event\user_login_failed::create($eventdata);
-                    $event->trigger();
-                    throw new moodle_exception('errorauthloginfailednouser', 'auth_voidc', null, null, '1');
-                }
+            if ($DB->record_exists('user', $existinguserparams)) {
+                $SESSION->auth_voidc_pending_signup = (object) [
+                    'oidcuniqid' => $oidcuniqid,
+                    'authparams' => $authparams,
+                    'tokenparams' => $tokenparams,
+                    'clientid' => (int) $this->clientrecord->id,
+                    'collided' => $username,
+                    'suggested' => $this->build_username_suggestion($username),
+                    'created' => time(),
+                ];
+                redirect(new moodle_url('/auth/voidc/choose_username.php'));
+                die();
             }
+
+            [$user, $tokenrec] = $this->finalize_new_user_signup(
+                $oidcuniqid, $username, $authparams, $tokenparams, $idtoken
+            );
 
             $user = authenticate_user_login($username, '', true);
 

@@ -566,20 +566,29 @@ class base {
             throw new moodle_exception('errorauthinvalididtoken', 'auth_voidc');
         }
 
-        // Cleanup old invalid token with the same oidcusername.
-        $DB->delete_records('auth_voidc_token', ['oidcusername' => $oidcusername]);
-
-        // Handle "The existing token for this user does not contain a valid user ID" error.
-        if ($userid == 0) {
-            $userrec = $DB->get_record('user', ['username' => $username]);
-            if ($userrec) {
-                $userid = $userrec->id;
-            }
-        }
-
         if (empty($this->clientrecord)) {
             throw new moodle_exception('errornoclientrecord', 'auth_voidc');
         }
+
+        // Cleanup old invalid token with the same oidcusername, scoped to THIS
+        // client. In a multi-IdP setup, `oidcusername` is not globally unique —
+        // two different IdPs routinely emit the same `preferred_username` for
+        // different humans (e.g. "apple" at both IdP-A and IdP-B). An unscoped
+        // delete here would silently wipe the other IdP's valid token row,
+        // dropping that user back into the new-user / choose-username flow on
+        // their next login. Always scope by clientid so one IdP's signup can
+        // only touch its own token rows.
+        $DB->delete_records('auth_voidc_token', [
+            'oidcusername' => $oidcusername,
+            'clientid' => (int) $this->clientrecord->id,
+        ]);
+
+        // Note: createtoken does NOT resolve $userid from $username here. In a multi-IdP
+        // setup the derived username is not a stable identity - two different humans
+        // signing in from two different IdPs can easily map to the same Moodle username,
+        // and silently linking on that would cross-wire their accounts. Callers must
+        // supply $userid explicitly (after creating the Moodle user themselves, or after
+        // resolving it through a trusted lookup such as the rocreds password grant).
 
         $tokenrec = new stdClass;
         $tokenrec->oidcuniqid = $oidcuniqid;

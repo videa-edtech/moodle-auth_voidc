@@ -132,7 +132,7 @@ class rocreds extends base {
      * @return bool Authentication success or failure.
      */
     public function user_login($username, $password = null) {
-        global $DB;
+        global $DB, $CFG;
 
         $authparams = ['code' => ''];
 
@@ -147,7 +147,7 @@ class rocreds extends base {
 
         // If we already have a token for this user, prefer its client so we hit the
         // IdP that issued it. Otherwise try each enabled client until one accepts the
-        // credentials — the password grant has no UI for the user to pick a provider.
+        // credentials - the password grant has no UI for the user to pick a provider.
         $clientsoftry = [];
         if (!empty($oidctoken) && !empty($oidctoken->clientid)) {
             $known = auth_voidc_get_client((int) $oidctoken->clientid);
@@ -187,7 +187,14 @@ class rocreds extends base {
             if (!empty($tokenrec)) {
                 $this->updatetoken($tokenrec->id, $authparams, $tokenparams);
             } else {
-                $this->createtoken($oidcuniqid, $username, $authparams, $tokenparams, $idtoken, 0);
+                // Resolve userid from the Moodle username explicitly. createtoken no
+                // longer does this lookup itself (see base.php::createtoken comment),
+                // so the password-grant flow must supply it. If no Moodle user exists
+                // yet, pass 0 and let user_authenticated_hook backfill the userid
+                // after the surrounding auth pipeline creates the account.
+                $userrec = $DB->get_record('user', ['username' => $username, 'mnethostid' => $CFG->mnet_localhost_id]);
+                $userid = !empty($userrec) ? (int) $userrec->id : 0;
+                $this->createtoken($oidcuniqid, $username, $authparams, $tokenparams, $idtoken, $userid);
             }
             return true;
         }
