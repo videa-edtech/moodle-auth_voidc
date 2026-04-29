@@ -181,6 +181,11 @@ $string['choose_username_missing'] = 'There is no pending sign-in to complete. P
 $string['choose_username_expired'] = 'Your sign-in session expired before you finished choosing a username. Please sign in again.';
 $string['choose_username_cancelled'] = 'Sign-in cancelled.';
 $string['error_no_response_available'] = 'No responses available.';
+$string['sso_selector_backlabel'] = 'Sign in';
+$string['sso_selector_title'] = 'Please choose a login system';
+$string['sso_selector_searchplaceholder'] = 'Enter your school';
+$string['sso_selector_empty'] = 'No available login systems.';
+$string['sso_selector_brandalt'] = 'EdraPath';
 
 $string['eventuserauthed'] = 'User Authorized with OpenID Connect';
 $string['eventusercreated'] = 'User created with OpenID Connect';
