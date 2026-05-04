@@ -30,4 +30,7 @@ $string['sso_selector_title'] = 'Vui lòng chọn hệ thống đăng nhập';
 $string['sso_selector_searchplaceholder'] = 'Nhập tên trường của bạn';
 $string['sso_selector_empty'] = 'Không có hệ thống đăng nhập khả dụng.';
 $string['sso_selector_brandalt'] = 'EdraPath';
-
+$string['client_field_department'] = 'Phòng ban';
+$string['client_field_department_help'] = 'Chọn phòng ban được gán cho hệ thống đăng nhập này.';
+$string['client_field_group'] = 'Nhóm quyền mặc định';
+$string['client_field_group_help'] = 'Chọn nhóm quyền mặc định sẽ được tự động gán cho những người dùng mới tạo thông qua hệ thống đăng nhập này.';

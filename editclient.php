@@ -59,9 +59,47 @@ $PAGE->navbar->add(get_string('client_add_heading', 'auth_voidc'), $pageurl);
 
 $context = context_system::instance();
 $fileoptions = auth_voidc_client_icon_filemanager_options();
+$departmentoptions = [0 => get_string('choosedots')];
+$departments = $DB->get_records('vloom_wp_departments', null, 'name ASC', 'id,name,parent_id');
+$childrenbyparent = [];
+foreach ($departments as $department) {
+    $parentid = empty($department->parent_id) ? 0 : (int)$department->parent_id;
+    $childrenbyparent[$parentid][] = $department;
+}
 
-$form = new clientedit($pageurl->out(false));
+$visited = [];
+$appenddepartmentoptions = function(int $parentid, int $level) use (&$appenddepartmentoptions, &$departmentoptions, &$childrenbyparent, &$visited): void {
+    if (empty($childrenbyparent[$parentid])) {
+        return;
+    }
+    foreach ($childrenbyparent[$parentid] as $department) {
+        $departmentid = (int)$department->id;
+        if (isset($visited[$departmentid])) {
+            continue;
+        }
+        $visited[$departmentid] = true;
+        $departmentoptions[$departmentid] = str_repeat('— ', $level) . format_string($department->name);
+        $appenddepartmentoptions($departmentid, $level + 1);
+    }
+};
+$appenddepartmentoptions(0, 0);
 
+foreach ($departments as $department) {
+    $departmentid = (int)$department->id;
+    if (!isset($visited[$departmentid])) {
+        $departmentoptions[$departmentid] = format_string($department->name);
+    }
+}
+$groupoptions = [0 => get_string('none')];
+$groups = $DB->get_records('vloom_permission_groups', ['enabled' => 1], 'name ASC', 'id, name, shortname');
+foreach ($groups as $group) {
+    $groupoptions[$group->id] = $group->name . ' (' . $group->shortname . ')';
+}
+
+$form = new clientedit($pageurl->out(false), [
+    'departmentoptions' => $departmentoptions,
+    'groupoptions' => $groupoptions,
+]);
 // Build draft area for the icon filemanager.
 $draftdata = $existing ? (array) $existing : ['id' => 0];
 if ($existing) {

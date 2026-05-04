@@ -345,6 +345,8 @@ function xmldb_auth_voidc_upgrade($oldversion) {
         // Adding fields to table auth_voidc_clients.
         $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
         $table->add_field('name', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('departmentid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+        $table->add_field('groupid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
         $table->add_field('idptype', XMLDB_TYPE_INTEGER, '2', null, XMLDB_NOTNULL, null, '0');
         $table->add_field('clientid', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, null);
         $table->add_field('clientauthmethod', XMLDB_TYPE_INTEGER, '2', null, XMLDB_NOTNULL, null, '1');
@@ -434,6 +436,32 @@ function xmldb_auth_voidc_upgrade($oldversion) {
 
         // Voidc savepoint reached.
         upgrade_plugin_savepoint(true, 2026041000, 'auth', 'voidc');
+    }
+
+    if ($oldversion < 2026050200) {
+        // Add required department mapping per client.
+        $table = new xmldb_table('auth_voidc_clients');
+        $field = new xmldb_field('departmentid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0', 'name');
+
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Voidc savepoint reached.
+        upgrade_plugin_savepoint(true, 2026050200, 'auth', 'voidc');
+    }
+
+    if ($oldversion < 2026050300) {
+        // Add required group mapping per client.
+        $table = new xmldb_table('auth_voidc_clients');
+        $field = new xmldb_field('groupid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0', 'departmentid');
+
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Voidc savepoint reached.
+        upgrade_plugin_savepoint(true, 2026050300, 'auth', 'voidc');
     }
 
     return true;

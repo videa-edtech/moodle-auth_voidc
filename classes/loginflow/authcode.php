@@ -282,6 +282,20 @@ class authcode extends base {
         $user = create_user_record($username, '', 'voidc');
         $tokenrec = $this->createtoken($oidcuniqid, $username, $authparams, $tokenparams, $idtoken, $user->id);
 
+        // Assign default permission group if configured for this client.
+        if (!empty($this->clientrecord) && !empty($this->clientrecord->groupid)) {
+            try {
+                $vloomUser = \Vloom\Workplace\Model\User::from($user->id);
+                $group = \Vloom\Permission\Group::getByID((int)$this->clientrecord->groupid);
+                if ($group) {
+                    $vloomUser->group = $group;
+                    $vloomUser->save();
+                }
+            } catch (\Exception $e) {
+                utils::debug('Failed to assign default group to new OIDC user.', __METHOD__, $e->getMessage());
+            }
+        }
+
         return [$user, $tokenrec];
     }
 

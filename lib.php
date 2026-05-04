@@ -159,6 +159,8 @@ function auth_voidc_create_client(stdClass $data): int {
     $now = time();
     $rec = (object) [
         'name' => $data->name,
+        'departmentid' => (int)$data->departmentid,
+        'groupid' => (int)($data->groupid ?? 0),
         'idptype' => AUTH_VOIDC_IDP_TYPE_OTHER,
         'clientid' => $data->clientid,
         'clientauthmethod' => AUTH_VOIDC_AUTH_METHOD_SECRET,
@@ -192,6 +194,8 @@ function auth_voidc_update_client(int $id, stdClass $data): void {
     $rec = (object) [
         'id' => $id,
         'name' => $data->name,
+        'departmentid' => (int)$data->departmentid,
+        'groupid' => (int)($data->groupid ?? 0),
         'clientid' => $data->clientid,
         'clientsecret' => $data->clientsecret ?? null,
         'authendpoint' => $data->authendpoint,
@@ -814,4 +818,3 @@ function auth_voidc_get_existing_claims(): array {
 
     return $tokenclaims;
 }
-

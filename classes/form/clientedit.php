@@ -62,6 +62,17 @@ class clientedit extends moodleform {
         $mform->addRule('clientid', null, 'required', null, 'client');
         $mform->addElement('static', 'clientid_help', '', get_string('clientid_help', 'auth_voidc'));
 
+        $departmentoptions = $this->_customdata['departmentoptions'] ?? [0 => get_string('choosedots')];
+        $mform->addElement('select', 'departmentid', get_string('client_field_department', 'auth_voidc'), $departmentoptions);
+        $mform->setType('departmentid', PARAM_INT);
+        $mform->addRule('departmentid', null, 'required', null, 'client');
+        $mform->addElement('static', 'departmentid_help', '', get_string('client_field_department_help', 'auth_voidc'));
+
+        $groupoptions = $this->_customdata['groupoptions'] ?? [0 => get_string('none')];
+        $mform->addElement('select', 'groupid', get_string('client_field_group', 'auth_voidc'), $groupoptions);
+        $mform->setType('groupid', PARAM_INT);
+        $mform->addElement('static', 'groupid_help', '', get_string('client_field_group_help', 'auth_voidc'));
+
         // Authentication header.
         $mform->addElement('header', 'authentication', get_string('settings_section_authentication', 'auth_voidc'));
         $mform->setExpanded('authentication');
@@ -152,6 +163,10 @@ class clientedit extends moodleform {
 
         if (empty(trim($data['name'] ?? ''))) {
             $errors['name'] = get_string('required');
+        }
+
+        if (empty($data['departmentid'])) {
+            $errors['departmentid'] = get_string('required');
         }
 
         // Require a secret only when creating a new client.
